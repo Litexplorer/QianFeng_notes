@@ -1,5 +1,5 @@
 ---
-title:01-单体应用：04章-BootStrap教程
+title:01-单体应用：04章-Bootstrap教程
 time:2019年10月14日
 ---
 
@@ -13,23 +13,23 @@ time:2019年10月14日
 
 
 
-## 一、BootStrap简介及安装
+## 一、Bootstrap简介及安装
 
 
 
-### 1.2 BootStrap安装
+### 1.2 Bootstrap安装
 
-首先下载BootStrap，地址为：https://getbootstrap.com/。由于浏览器的兼容性问题，尽量选取3.X的版本学习（这是因为BootStrap3.X版本支持的最低IE浏览器版本为IE8）。
+首先下载Bootstrap，地址为：https://getBootstrap.com/。由于浏览器的兼容性问题，尽量选取3.X的版本学习（这是因为Bootstrap3.X版本支持的最低IE浏览器版本为IE8）。
 
 
 
 下载完成以后，我们得到一个压缩包。解压这个压缩包，并放到项目的目录下即可。
 
-> 注意：BootStrap框架中用到了很多jquery的语法，因此需要依赖jquery。
+> 注意：Bootstrap框架中用到了很多jquery的语法，因此需要依赖jquery。
 
 
 
-### 1.3 BootStrap入门案例
+### 1.3 Bootstrap入门案例
 
 #### 1.3.1 项目目录结构
 
@@ -59,8 +59,13 @@ time:2019年10月14日
 在<head>中加入以下代码：
 
 ```html
+<<<<<<< HEAD
 <link rel="stylesheet" type="text/css" href="assets/plugins/bootstrap/css/bootstrap.min.css"/>
 <link rel="stylesheet" type="text/css" href="assets/plugins/bootstrap/css/bootstrap.css"/>
+=======
+<link rel="stylesheet" type="text/css" href="assets/plugins/Bootstrap/css/Bootstrap.min.css"/>
+    <link rel="stylesheet" type="text/css" href="assets/plugins/Bootstrap/css/Bootstrap.css"/>
+>>>>>>> 1e905aafe7edd6c4ee73fea00dcf04cd6e8ada56
 
 ```
 
@@ -72,11 +77,11 @@ time:2019年10月14日
 
 ```html
 <script src="assets/plugins/jquery-3.3.1.min.js"></script>
-<script src="assets/plugins/bootstrap/js/bootstrap.min.js" ></script>
-<script src="assets/plugins/bootstrap/css/bootstrap-theme.css" ></script>
+<script src="assets/plugins/Bootstrap/js/Bootstrap.min.js" ></script>
+<script src="assets/plugins/Bootstrap/css/Bootstrap-theme.css" ></script>
 ```
 
-上面第一行是引入BootStrap所依赖的jquery框架，==为了保险起见，最好放在第一行==。
+上面第一行是引入Bootstrap所依赖的jquery框架，==为了保险起见，最好放在第一行==。
 
 
 
@@ -98,11 +103,11 @@ time:2019年10月14日
 
 ```html
 <!-- HTML5 Shiv 和 Respond.js 用于让 IE8 支持 HTML5元素和媒体查询 -->
-    <!-- 注意： 如果通过 file://  引入 Respond.js 文件，则该文件无法起效果 -->
-    <!--[if lt IE 9]>
-    <script src="https://oss.maxcdn.com/libs/html5shiv/3.7.0/html5shiv.js"></script>
-    <script src="https://oss.maxcdn.com/libs/respond.js/1.3.0/respond.min.js"></script>
-    <![endif]-->
+<!-- 注意： 如果通过 file://  引入 Respond.js 文件，则该文件无法起效果 -->
+<!--[if lt IE 9]>
+<script src="https://oss.maxcdn.com/libs/html5shiv/3.7.0/html5shiv.js"></script>
+<script src="https://oss.maxcdn.com/libs/respond.js/1.3.0/respond.min.js"></script>
+<![endif]-->
 ```
 
 如果不需要兼容IE8和IE9，那么上面的代码可以不添加。
@@ -132,8 +137,8 @@ time:2019年10月14日
 >     <meta charset="UTF-8"  name="viewport" content="width=device-width, initial-scale=1.0">
 >     <title>首页</title>
 > 
->     <link rel="stylesheet" type="text/css" href="assets/plugins/bootstrap/css/bootstrap.min.css"/>
->     <link rel="stylesheet" type="text/css" href="assets/plugins/bootstrap/css/bootstrap.css"/>
+>     <link rel="stylesheet" type="text/css" href="assets/plugins/Bootstrap/css/Bootstrap.min.css"/>
+>     <link rel="stylesheet" type="text/css" href="assets/plugins/Bootstrap/css/Bootstrap.css"/>
 > 
 >     <!-- HTML5 Shiv 和 Respond.js 用于让 IE8 支持 HTML5元素和媒体查询 -->
 >     <!-- 注意： 如果通过 file://  引入 Respond.js 文件，则该文件无法起效果 -->
@@ -147,8 +152,8 @@ time:2019年10月14日
 > <h1>Hello, world!</h1>
 > 
 > <script src="assets/plugins/jquery-3.3.1.min.js"></script>
-> <script src="assets/plugins/bootstrap/js/bootstrap.min.js" ></script>
-> <script src="assets/plugins/bootstrap/css/bootstrap-theme.css" ></script>
+> <script src="assets/plugins/Bootstrap/js/Bootstrap.min.js" ></script>
+> <script src="assets/plugins/Bootstrap/css/Bootstrap-theme.css" ></script>
 > 
 > </body>
 > </html>
@@ -163,6 +168,7 @@ time:2019年10月14日
 ![1571153152852](assets/1571153152852.png)
 
 为了验证Bootstrap的css和js是否生效，我们可以打开控制台观察结果：如果引入的语句没有报404错误，那么说明已经正确引入了。
+
 
 
 
@@ -242,16 +248,5 @@ Bootstrap 提供了一套响应式、移动设备优先的流式网格系统，�
 
 
 log4j输出信息时，如果需要拼接多个字符串，那么最好使用占位符模式。
-
-
-
-
-
-
-
-
-
-
-
 
 
