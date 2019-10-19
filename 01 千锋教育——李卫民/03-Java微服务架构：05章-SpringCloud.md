@@ -964,9 +964,102 @@ Feign 是一个声明式的伪 Http 客户端，它使得写 Http 客户端变�
 
 
 
+### 2.2.6 使用熔断器防止服务雪崩
+
+#### 2.2.6.1 概述
+
+在微服务架构中，根据业务来拆分成一个个的服务，服务与服务之间可以通过 `RPC` 相互调用，在 Spring Cloud 中可以用 `RestTemplate + Ribbon` 和 `Feign` 来调用。为了保证其高可用，单个服务通常会集群部署。由于网络原因或者自身的原因，服务并不能保证 100% 可用，==如果单个服务出现问题，调用这个服务就会出现线程阻塞，此时若有大量的请求涌入，`Servlet` 容器的线程资源会被消耗完毕，导致服务瘫痪==。服务与服务之间的依赖性，故障会传播，会对整个微服务系统造成灾难性的严重后果，这就是服务故障的 **“雪崩”** 效应。
 
 
 
+Netflix 开源了 Hystrix 组件，实现了熔断器模式，Spring Cloud 对这一组件进行了整合。在微服务架构中，一个请求需要调用多个服务是非常常见的，如下图：
+
+![img](assets/Lusifer201805292246007.png)
+
+较底层的服务如果出现故障，会导致连锁故障。当对特定的服务的调用的不可用达到一个阀值（Hystrix 是 **5 秒 20 次**） 熔断器将会被打开。
+
+![img](assets/Lusifer201805292246008.png)
+
+熔断器打开后，为了避免连锁故障，通过 `fallback` 方法可以直接返回一个固定值。
+
+
+
+#### 2.2.6.2 在Ribbon中使用熔断器
+
+请查看[在Ribbon中使用熔断器](https://www.funtl.com/zh/spring-cloud-netflix/Spring-Cloud-%E4%BD%BF%E7%94%A8%E7%86%94%E6%96%AD%E5%99%A8%E9%98%B2%E6%AD%A2%E6%9C%8D%E5%8A%A1%E9%9B%AA%E5%B4%A9.html#ribbon-%E4%B8%AD%E4%BD%BF%E7%94%A8%E7%86%94%E6%96%AD%E5%99%A8)；
+
+
+
+#### 2.2.6.3 在Feign中使用熔断器
+
+Feign默认自带了熔断器，但是默认是关闭的，我们需要手动开启：
+
+1. 在application.yml中添加继续添加以下配置：
+
+   ```yml
+   # 开启熔断器
+   feign:
+     hystrix:
+       enabled: true
+   ```
+
+
+
+2. 创建熔断器类，并实现对应service的接口：
+
+   ```java
+   @Component
+   public class AdminServiceHystrix implements AdminService {
+       
+       @Override
+       public String sayHi(String message) {
+           String format = String.format("你好，你的消息是：%s, 但是请求发生错误了！", message);
+   
+           return format;
+       }
+   }
+   ```
+
+   - 一般来说，熔断器实现类都放在service类所在包的子包hystrix包下；
+   - 重载的`sayHi`方法就是当接口方法`sayHi`出现错误时，自动调用的方法；
+
+
+
+3. 在service接口中注解@FeignClient中指定方法调用失败时自动回调的方法：
+
+   ```java
+   @FeignClient(value = "HELLO-SPRING-CLOUD-SERVICE-ADMIN", fallback = AdminServiceHystrix.class)
+   public interface AdminService {
+     // 省略具体方法
+   }
+   ```
+
+   fallback属性回调方法所在的类，就是我们上面新创建的AdminServiceHystrix；
+
+
+
+4. 启动项目，并测试：
+   - 为了能够测试到“调用服务提供方方法异常”的情况，我们只需要把服务提供方的服务关闭即可；
+   - 关闭以后，我们继续访问sayHi方法，发现界面中输出的是：
+     ![1571460593385](assets/1571460593385.png)
+
+5. 异常情况：在本次例子中，当关闭了服务提供方的服务以后，并在前台发送请求，后台出现了
+
+   ```
+   ClassNotFoundException: com.netflix.hystrix.metric.HystrixCommandCompletionS……
+   ```
+
+   的异常，此时，我们需要修改引入的`spring-cloud-starter-openfeign`依赖的版本：
+
+   ```xml
+   <dependency>
+     <groupId>org.springframework.cloud</groupId>
+     <artifactId>spring-cloud-starter-openfeign</artifactId>
+     <version>2.1.3.RELEASE</version>
+   </dependency>
+   ```
+
+   再次启动项目即可。
 
 
 
