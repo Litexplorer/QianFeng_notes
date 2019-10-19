@@ -775,6 +775,197 @@ public class AdminController {
 
 ![1571387413383](assets/1571387413383.png)
 
+### 2.2.5 创建服务消费者（Feign方式）
+
+#### 2.2.5.1 概述
+
+Feign 是一个声明式的伪 Http 客户端，它使得写 Http 客户端变得更简单。使用 Feign，只需要创建一个接口并注解。它具有可插拔的注解特性，可使用 Feign 注解和 JAX-RS 注解。Feign 支持可插拔的编码器和解码器。Feign 默认集成了 Ribbon，并和 Eureka 结合，默认实现了负载均衡的效果
+
+- Feign 采用的是基于接口的注解
+- Feign 整合了 ribbon；
+
+
+
+#### 2.2.5.2 创建服务消费者
+
+在创建服务消费者以前，我们也是需要启动多个服务提供者实例。
+
+
+
+1. 创建文件夹hello-spring-cloud-web-admin-feign，并在文件夹内添加pom文件：
+
+```xml
+<?xml version="1.0" encoding="UTF-8"?>
+<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+    <modelVersion>4.0.0</modelVersion>
+
+    <parent>
+        <groupId>com.chen</groupId>
+        <artifactId>hello-spring-cloud-dependencies</artifactId>
+        <version>1.0.0-SNAPSHOT</version>
+        <relativePath>../hello-spring-cloud-dependencies/pom.xml</relativePath>
+    </parent>
+
+    <artifactId>hello-spring-cloud-web-admin-feign</artifactId>
+    <packaging>jar</packaging>
+
+    <name>hello-spring-cloud-web-admin-feign</name>
+    <!--<url>http://www.funtl.com</url>-->
+    <inceptionYear>2018-Now</inceptionYear>
+
+    <dependencies>
+        <!-- Spring Boot Begin -->
+        <dependency>
+            <groupId>org.springframework.boot</groupId>
+            <artifactId>spring-boot-starter-web</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>org.springframework.boot</groupId>
+            <artifactId>spring-boot-starter-tomcat</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>org.springframework.boot</groupId>
+            <artifactId>spring-boot-starter-thymeleaf</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>org.springframework.boot</groupId>
+            <artifactId>spring-boot-starter-actuator</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>org.springframework.boot</groupId>
+            <artifactId>spring-boot-starter-test</artifactId>
+            <scope>test</scope>
+        </dependency>
+        <!-- Spring Boot End -->
+
+        <!-- Spring Cloud Begin -->
+        <dependency>
+            <groupId>org.springframework.cloud</groupId>
+            <artifactId>spring-cloud-starter-netflix-eureka-server</artifactId>
+            <version>2.1.0.RELEASE</version>
+        </dependency>
+        <dependency> ①
+            <groupId>org.springframework.cloud</groupId>
+            <artifactId>spring-cloud-starter-openfeign</artifactId>
+            <version>2.1.0.RELEASE</version>
+        </dependency>
+        <!-- Spring Cloud End -->
+
+        <!-- 解决 thymeleaf 模板引擎一定要执行严格的 html5 格式校验问题 -->
+        <dependency>
+            <groupId>net.sourceforge.nekohtml</groupId>
+            <artifactId>nekohtml</artifactId>
+        </dependency>
+    </dependencies>
+
+    <build>
+        <plugins>
+            <plugin>
+                <groupId>org.springframework.boot</groupId>
+                <artifactId>spring-boot-maven-plugin</artifactId>
+                <configuration>
+                    <mainClass>com.chen.hello.spring.cloud.web.admin.feign.WebAdminFeignApplication</mainClass>
+                </configuration>
+            </plugin>
+        </plugins>
+    </build>
+</project>
+```
+
+①：添加了feign的依赖；
+
+
+
+2. 编写application.yml文件
+
+   ```yml
+   spring:
+     application:
+       name: hello-spring-cloud-web-admin-feign
+     thymeleaf:
+       cache: false
+       mode: LEGACYHTML5
+       encoding: utf-8
+       servlet:
+         content-type: text/html
+   
+   
+   server:
+     port: 8765
+   eureka:
+     client:
+       service-url:
+         defaultZone: http://localhost:8761/eureka/
+   ```
+
+   这个yml中也添加了Thymeleaf相关的内容；
+
+
+
+3. 创建启动类，并添加两个注解：`@EnableFeignClients`和`@EnableDiscoveryClient`：
+
+   ```java
+   @SpringBootApplication
+   @EnableFeignClients
+   @EnableDiscoveryClient
+   public class WebAdminFeignApplication {
+   
+       public static void main(String[] args) {
+           SpringApplication.run(WebAdminFeignApplication.class, args);
+       }
+   }
+   ```
+
+
+
+4. 创建service类，并添加注解：`@FeignClient`
+
+   ```java
+   @FeignClient("HELLO-SPRING-CLOUD-SERVICE-ADMIN")
+   public interface AdminService {
+   
+       @RequestMapping(value = "hi", method = RequestMethod.GET)
+       public String sayHi(@RequestParam("message") String message);    // 注意，必须带
+   }
+   ```
+
+   注解`@FeignClien`t中的值指定服务提供方，在本例中`是HELLO-SPRING-CLOUD-SERVICE-ADMIN`
+
+   > 注意：在参数中必须加上`@RequestParam("message")`（`message`指的是服务提供方的入参），否则会出现以下错误：feign.FeignException: status 405 reading AdminService#sayHi(String)异常
+
+
+
+5. 创建控制器，并调用service层的方法：
+
+   ```java
+   @RestController
+   public class AdminController {
+   
+       @Autowired
+       private AdminService adminService;
+   
+       @RequestMapping(value = "/hi", method = RequestMethod.GET)
+       public String hi(String message) {
+           String hi = adminService.sayHi(message);
+           return hi;
+       }
+   }
+   ```
+
+
+
+6. 启动该项目，启动完毕以后，（根据配置文件）该服务监听了8765端口。我们通过`http://localhost:8765/hi?message=某个参数`访问即可看到界面：
+   ![1571457911095](assets/1571457911095.png)
+
+
+   不断刷新这个请求，会发现不同时刻访问了不同的服务实例：
+   ![1571457999913](assets/1571457999913.png)
+
+
+
+
+
 
 
 
