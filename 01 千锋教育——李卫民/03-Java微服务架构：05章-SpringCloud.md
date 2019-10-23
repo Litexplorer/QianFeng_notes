@@ -1063,6 +1063,147 @@ Feign默认自带了熔断器，但是默认是关闭的，我们需要手动开
 
 
 
+### 2.2.7 熔断监视器
+
+#### 2.2.7.1 概述
+
+在实际项目开发中，“熔断”机制最好只发生在服务器负载过大的情况。如果我们的服务一直被熔断，那么可能是我们的服务出现问题了。此时我们需要一个“熔断器监控”。
+
+
+
+#### 2.2.7.2 在项目中加入熔断器监视器
+
+在 Ribbon 和 Feign 项目增加 Hystrix 仪表盘功能，两个项目的改造方式相同
+
+
+
+1. 在pom文件中新增以下依赖：
+
+   ```xml
+   <dependency>
+       <groupId>org.springframework.cloud</groupId>
+       <artifactId>spring-cloud-starter-netflix-hystrix-dashboard</artifactId>
+       <version>${openfeign.version}</version>
+   </dependency>
+   ```
+
+   
+
+2. 在启动类中添加注解`@EnableHystrixDashboard`：
+
+   ```java
+   @SpringBootApplication
+   @EnableFeignClients
+   @EnableDiscoveryClient
+   @EnableHystrixDashboard
+   public class WebAdminFeignApplication {
+   
+       public static void main(String[] args) {
+           SpringApplication.run(WebAdminFeignApplication.class, args);
+       }
+   }
+   ```
+
+   
+
+3. 熔断器需要添加被监控的地址，而熔断器的地址是以Servlet的形式来展示的，因此，我们需要创建一个Servlet：
+
+   ```java
+   @Configuration
+   public class HystrixDashboardConfiguration {
+   
+       @Bean
+       public ServletRegistrationBean getServlet() {
+           HystrixMetricsStreamServlet streamServlet = new HystrixMetricsStreamServlet();
+   
+           // 我们现在创建了一个 Servlet，在传统项目中这个Servlet需要在web.xml中配置。但是在SpringBoot中并没有web.xml文件，此时我们需要使用
+           // SpringBoot提供的 ServletRegistrationBean 来“创建”一个web.xml.
+           // 具体实例如下所示：
+           ServletRegistrationBean registrationBean = new ServletRegistrationBean(streamServlet);
+           registrationBean.setLoadOnStartup(1);
+           registrationBean.addUrlMappings("/hystrix.stream");
+           registrationBean.setName("HystrixMetricsStreamServlet");
+           return registrationBean;
+       }
+   }
+   ```
+
+   > 上面这个Servlet编写在`config`包下
+
+
+
+3. 启动项目，并进入`http://localhost:8765/hystrix`（注意：不是`/hystrix.stream`）即可访问到Hystrix-Dashboard界面：
+   ![1571629157657](assets/1571629157657.png)
+
+   > 注意：我们加入熔断器监视器并启动项目以后，需要先出发熔断，然后再去观察仪表板，此时会发现熔断的统计数据：
+   > ![1571629393679](assets/1571629393679.png)
+
+
+
+#### 附：Hystrix 说明
+
+##### [#](https://www.funtl.com/zh/spring-cloud-netflix/Spring-Cloud-使用熔断器仪表盘监控.html#什么情况下会触发-fallback-方法)什么情况下会触发 `fallback` 方法
+
+| 名字                 | 描述                                 | 触发fallback |
+| -------------------- | ------------------------------------ | ------------ |
+| EMIT                 | 值传递                               | NO           |
+| SUCCESS              | 执行完成，没有错误                   | NO           |
+| FAILURE              | 执行抛出异常                         | YES          |
+| TIMEOUT              | 执行开始，但没有在允许的时间内完成   | YES          |
+| BAD_REQUEST          | 执行抛出`HystrixBadRequestException` | NO           |
+| SHORT_CIRCUITED      | 断路器打开，不尝试执行               | YES          |
+| THREAD_POOL_REJECTED | 线程池拒绝，不尝试执行               | YES          |
+| SEMAPHORE_REJECTED   | 信号量拒绝，不尝试执行               | YES          |
+
+##### [#](https://www.funtl.com/zh/spring-cloud-netflix/Spring-Cloud-使用熔断器仪表盘监控.html#fallback-方法在什么情况下会抛出异常)`fallback` 方法在什么情况下会抛出异常
+
+| 名字              | 描述                           | 抛异常 |
+| ----------------- | ------------------------------ | ------ |
+| FALLBACK_EMIT     | Fallback值传递                 | NO     |
+| FALLBACK_SUCCESS  | Fallback执行完成，没有错误     | NO     |
+| FALLBACK_FAILURE  | Fallback执行抛出出错           | YES    |
+| FALLBACK_REJECTED | Fallback信号量拒绝，不尝试执行 | YES    |
+| FALLBACK_MISSING  | 没有Fallback实例               | YES    |
+
+##### [#](https://www.funtl.com/zh/spring-cloud-netflix/Spring-Cloud-使用熔断器仪表盘监控.html#hystrix-dashboard-界面监控参数)Hystrix Dashboard 界面监控参数
+
+![img](assets/20171123110838020.png)
+
+#### [#](https://www.funtl.com/zh/spring-cloud-netflix/Spring-Cloud-使用熔断器仪表盘监控.html#hystrix-常用配置信息)Hystrix 常用配置信息
+
+##### [#](https://www.funtl.com/zh/spring-cloud-netflix/Spring-Cloud-使用熔断器仪表盘监控.html#超时时间（默认1000ms，单位：ms）)超时时间（默认1000ms，单位：ms）
+
+- `hystrix.command.default.execution.isolation.thread.timeoutInMilliseconds`：在调用方配置，被该调用方的所有方法的超时时间都是该值，优先级低于下边的指定配置
+- `hystrix.command.HystrixCommandKey.execution.isolation.thread.timeoutInMilliseconds`：在调用方配置，被该调用方的指定方法（HystrixCommandKey 方法名）的超时时间是该值
+
+##### [#](https://www.funtl.com/zh/spring-cloud-netflix/Spring-Cloud-使用熔断器仪表盘监控.html#线程池核心线程数)线程池核心线程数
+
+- `hystrix.threadpool.default.coreSize`：默认为 10
+
+##### [#](https://www.funtl.com/zh/spring-cloud-netflix/Spring-Cloud-使用熔断器仪表盘监控.html#queue)Queue
+
+- `hystrix.threadpool.default.maxQueueSize`：最大排队长度。默认 -1，使用 `SynchronousQueue`。其他值则使用 `LinkedBlockingQueue`。如果要从 -1 换成其他值则需重启，即该值不能动态调整，若要动态调整，需要使用到下边这个配置
+- `hystrix.threadpool.default.queueSizeRejectionThreshold`：排队线程数量阈值，默认为 5，达到时拒绝，如果配置了该选项，队列的大小是该队列
+
+**注意：** 如果 `maxQueueSize=-1` 的话，则该选项不起作用
+
+##### [#](https://www.funtl.com/zh/spring-cloud-netflix/Spring-Cloud-使用熔断器仪表盘监控.html#断路器)断路器
+
+- `hystrix.command.default.circuitBreaker.requestVolumeThreshold`：当在配置时间窗口内达到此数量的失败后，进行短路。默认 20 个（10s 内请求失败数量达到 20 个，断路器开）
+- `hystrix.command.default.circuitBreaker.sleepWindowInMilliseconds`：短路多久以后开始尝试是否恢复，默认 5s
+- `hystrix.command.default.circuitBreaker.errorThresholdPercentage`：出错百分比阈值，当达到此阈值后，开始短路。默认 50%
+
+##### [#](https://www.funtl.com/zh/spring-cloud-netflix/Spring-Cloud-使用熔断器仪表盘监控.html#fallback)fallback
+
+- `hystrix.command.default.fallback.isolation.semaphore.maxConcurrentRequests`：调用线程允许请求 `HystrixCommand.GetFallback()` 的最大数量，默认 10。超出时将会有异常抛出，注意：该项配置对于 THREAD 隔离模式也起作用
+
+##### [#](https://www.funtl.com/zh/spring-cloud-netflix/Spring-Cloud-使用熔断器仪表盘监控.html#属性配置参数)属性配置参数
+
+- 参数说明：https://github.com/Netflix/Hystrix/wiki/Configuration
+- HystrixProperty 参考代码：http://www.programcreek.com/java-api-examples/index.php?source_dir=Hystrix-master/hystrix-contrib/hystrix-javanica/src/test/java/com/netflix/hystrix/contrib/javanica/test/common/configuration/command/BasicCommandPropertiesTest.java
+
+
+
 
 
 
