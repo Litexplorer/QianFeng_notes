@@ -229,6 +229,48 @@ Vue 两大核心要素：
 
 
 
+#### 2.5.2 循环遍历
+
+```html
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta http-equiv="X-UA-Compatible" content="ie=edge">
+    <title>lesson-03</title>
+     <!-- 引入 Vue.js -->
+     <script src="https://cdn.jsdelivr.net/npm/vue@2.5.21/dist/vue.js"></script>
+</head>
+<body>
+
+    <div id="app">
+        <li v-for="item in list">{{item.id}}</li> ①
+        <li v-for="item in list">{{item.name}}</li>
+    </div>
+    
+    <script>
+        var vm = new Vue({
+            el : '#app', 
+            data : {
+                list : [{
+                    id : 'id01', 
+                    name : 'name01'
+                }, {
+                    id : 'id02', 
+                    name : 'name02'
+                }]
+            }
+        })
+    </script>
+</body>
+</html>
+```
+
+① ：这是 Vue 的循环语句的语法，和 Thymeleaf 非常像。另外，我们还可以发现：当需要访问的数据在 Vue 的标签中时，不需要使用 `{{}}` 形式，而不在 Vue 的标签中时，则需要使用 `{{}}`来获取。
+
+
+
 
 
 
