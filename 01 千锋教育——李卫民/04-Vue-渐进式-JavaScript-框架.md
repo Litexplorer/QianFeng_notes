@@ -271,6 +271,49 @@ Vue 两大核心要素：
 
 
 
+### 2.6 事件篇
+
+```html
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta http-equiv="X-UA-Compatible" content="ie=edge">
+    <title>lesson-04</title>
+
+    <!-- 引入 Vue.js -->
+    <script src="https://cdn.jsdelivr.net/npm/vue@2.5.21/dist/vue.js"></script>
+</head>
+<body>
+    <div id="app">
+        <!-- 使用  v-on:click 标签来指定具体的方法名称 ① -->
+        <button v-on:click="sayHi">点我</button>
+    </div>
+
+    <script type="text/javascript">
+        var vm = new Vue({
+            el : '#app',
+            data : {
+                message : '你好，Vue！'
+            }, 
+            // 在 methods 中定义方法 ②
+            methods : {
+                // 方法名称后面不需要添加 （） ③
+                sayHi : function(event) {
+                    alert(this.message);
+                }
+            }
+        })
+    </script>
+</body>
+</html>
+```
+
+①、②、③请看注释
+
+
+
 
 
 
