@@ -178,6 +178,57 @@ Vue 两大核心要素：
 
 
 
+### 2.5 Vue 语法篇
+
+我们下面来介绍几个常用的 Vue 语法：
+
+- v-if(v-else-if、v-else)
+- v-for
+
+
+
+#### 2.5.1 条件判断
+
+```html
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta http-equiv="X-UA-Compatible" content="ie=edge">
+    <title>lesson-02</title>
+
+    <script src="https://cdn.jsdelivr.net/npm/vue@2.5.21/dist/vue.js"></script>
+</head>
+<body>
+    
+    <div id="app">
+        <h1 v-if="ok">Yes</h1> ②
+        <h1 v-else>No</h1>
+    </div>
+
+    <script type="text/javascript">
+        var vm = new Vue({
+            el : '#app', 
+            data : {
+                ok : true ①
+            }
+        })
+    </script>
+</body>
+</html>
+```
+
+①：在数据中直接定义键值对；
+
+②：v-if 标签定义在 HTML 标签中，v-if 的值直接使用 ① 处的键；
+
+
+
+另外，①中可以定义包含中文的 键，在②处也可以直接引用。
+
+
+
 
 
 
