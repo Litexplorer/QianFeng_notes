@@ -93,15 +93,92 @@ Vue 两大核心要素：
 
 ### 2.4 第一个 Vue.js 应用程序
 
-按照 Model View ViewModel 来对应！
+**1. 我们首先在编辑器中新建一个 HTML，并添加一个 div ：**（TIPS：如果使用 VSCode 开发，那么可以在新建文件以后，把文件的语言模式设置为“HTML”，接着，先按<kbd>!</kbd>，再按<kbd>Tab</kbd>即可出现 HTML5 模板）
+
+```html
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta http-equiv="X-UA-Compatible" content="ie=edge">
+    <title>lesson-01</title>
+
+</head>
+<body>
+    <div id="app">
+    </div>
+</body>
+</html>
+```
 
 
 
-要想使用 Vue开发者工具来调试，需要在 HTML 中引入 “非 min”的
+**2. 接着，引入 Vue.js **
+
+在 html→head中加入以下代码：
+
+```html
+<!-- 引入 Vue.js -->
+<script src="https://cdn.jsdelivr.net/npm/vue@2.5.21/dist/vue.js"></script>
+```
 
 
 
-如果使用了 vue 的属性的话，那么就不需要使用“双花括号”的语法。
+> 上面的 script 中的值指的是 Vue.js 的 CDN 地址，通常来说，CDN 地址包含了两个，分别是：
+>
+> - `<script src="https://cdn.jsdelivr.net/npm/vue@2.5.21/dist/vue.js"></script>`
+>
+> - `  <script src="https://cdn.jsdelivr.net/npm/vue@2.5.21/dist/vue.min.js">  </script>`
+>
+>   如果在项目中引入的是第二个（也就是说带有 “min” 的 CDN 地址，那么我们就不能在页面上随意修改变量的值了（也可以说成：“min” 版本的不支持调试模式））
+
+
+
+**3. 编写 Vue 的实例**
+
+```html
+ <script type="text/javascript">
+     var vm = new Vue({
+         el : '#app',
+         data : {
+             message : '你好，Vue！'
+         }
+     })
+</script>
+```
+
+上面的代码中，`new Vue`会返回一个 Vue 对象；该对象有两个属性：`el`，对应了哪个页面元素（如果该页面元素使用了 `id` 属性，那么具体的语法为：`el : ‘#id’`）；以及`data`，里面定义了具体的数据，数据一般是以 json 形式呈现的。
+
+
+
+> 注意：定义了 Vue 对象以后，我们想要获取 `message `的值，可以在浏览器控制台中输入` vm.message`，并按回车即可。可以发现：节点 `data `只是一个语法上的标签，在获取具体的数据时，是需要忽略的。
+
+
+
+**4. 在视图中获取数据**
+
+把 div 中的代码修改如下：
+
+```xml
+<div id="app">
+    {{message}}
+</div>
+```
+
+
+
+最后，我们在浏览器中运行页面，即可看到以下输出：
+
+![image-20191222132251008](04-Vue-渐进式-JavaScript-框架.assets/image-20191222132251008.png)
+
+我们在控制台中修改` vm.message` 的值，页面上会马上显示修改后的值：
+
+![image-20191222132405622](04-Vue-渐进式-JavaScript-框架.assets/image-20191222132405622.png)
+
+
+
+
 
 
 
