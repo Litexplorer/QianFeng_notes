@@ -674,50 +674,236 @@ public final class CookieUtils {
 
 我们把当前的教程分为以下几种形式：
 
-- 统一的依赖管理（dependencies）
-- 通用的工具类（commons）
-- 领域模型（domain）
-- 管理后台（admin）
-- 商城前端（ui）
-- 接口模块（api）
+- 统一的依赖管理（dependencies）：用于管理整个工程中的依赖
+- 通用的工具类（commons）：工程中用到的工具类统一放置到这个项目中；
+- 领域模型（domain）：工程中用到的实体类统一放置到这个项目中；
+- 管理后台（admin）：my-shop 系统中管理员后台
+- 商城前端（ui）：my-shop 系统中前台购物系统
+- 接口模块（api）：
 
 
 
 具体的流程如下所示：
 
+#### 3.4.2 创建根工程
 
+创建一个名为 `my-shop` 的工程，`pom.xml` 文件如下：
 
-#### 3.4.2 创建根项目
+```xml
+<?xml version="1.0" encoding="UTF-8"?>
+<project xmlns="http://maven.apache.org/POM/4.0.0"
+         xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+    <modelVersion>4.0.0</modelVersion>
 
-
-
-
-
-### 3.4.3 思考：在“复制粘贴”代码的顺序
-
-#### 3.4.3.1 概述
-
-**场景：**
-
-假设现在有一个旧项目，这个旧项目的很多代码需要迁移到新的项目中去；新项目和旧项目中存在很多相似的地方，但是也存在不少相异之处；我们需要把旧项目中的代码按照新项目的项目架构（或者其他规则）迁移到新项目中去。那么，==应该如何才能更快、更有效、更省力地完成代码的迁移呢==？我们现有的工具是一个集成开发环境，在这个环境中含有代码的语法提示等功能。
-
-
-
-通过上面的描述，大概可以抽象出这样一个问题：在一个集成开发环境中，如何合理安排顺序可以使得把旧代码迁移到新代码的过程中更加有效、不容易出错？
-
-
-
-目前想到的一个方式就是按照“入口顺序”：比如说在一个旧项目中，总会有若干个==“入口文件”==，具体距离就是 SSM 项目中的 web.xml 。另外还有一些就是 ==“字典索引”==类的文件，例如在 Spring 文件引入了子 Spring 文件。这个父 Spring 文件就是“字典索引”文件。
-
-我们在移动项目的过程中，先把==“入口文件”以及“字典索引文件”==移动到新项目中，然后利用集成开发环境的语法提示功能来进行修正错误。错误有的时候是因为缺少文件而导致的，而这个文件又会依赖其他的文件，因此，继续利用语法提示功能将缺少的文件补入到新项目中。
+    <groupId>com.chen</groupId>
+    <artifactId>my-shop</artifactId>
+    <version>1.0-SNAPSHOT</version>
+    <packaging>pom</packaging>
+    
+    <modules>
+    
+    </modules>
+</project>
+```
 
 
 
-此外，可能旧文件到新文件可能需要转化规则，我们需要先构想转化规则，再实际去移动文件。转化的规则越直观越好。例如
+#### 3.4.3 创建统一的依赖管理项目
+
+我们在工程的目录下创建一个 my-shop-dependencies 文件夹，并在这个文件夹中创建依赖管理项目。项目的 pom 文件如下：
+
+```xml
+<?xml version="1.0" encoding="UTF-8"?>
+<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+    <modelVersion>4.0.0</modelVersion>
+
+    <parent>
+        <groupId>com.chen</groupId>
+        <artifactId>my-shop</artifactId>
+        <version>1.0-SNAPSHOT</version>
+        <relativePath>../pom.xml</relativePath>
+    </parent>
+
+    <artifactId>my-shop-dependencies</artifactId>
+    <packaging>pom</packaging>
+
+    <name>my-shop-dependencies</name>
+    <description></description>
+
+    <properties>
+        <!-- 环境配置 -->
+        <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
+        <project.reporting.outputEncoding>UTF-8</project.reporting.outputEncoding>
+        <java.version>1.8</java.version>
+
+        <!-- 统一的依赖管理 -->
+        <commons-lang3.version>3.5</commons-lang3.version>
+        <jstl.version>1.2</jstl.version>
+        <log4j.version>1.2.17</log4j.version>
+        <servlet-api.version>3.1.0</servlet-api.version>
+        <slf4j.version>1.7.25</slf4j.version>
+        <spring.version>4.3.17.RELEASE</spring.version>
+    </properties>
+
+    <dependencyManagement>
+        <dependencies>
+            <!-- Spring Begin -->
+            <dependency>
+                <groupId>org.springframework</groupId>
+                <artifactId>spring-context</artifactId>
+                <version>${spring.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>org.springframework</groupId>
+                <artifactId>spring-webmvc</artifactId>
+                <version>${spring.version}</version>
+            </dependency>
+            <!-- Spring End -->
+
+            <!-- Servlet Begin -->
+            <dependency>
+                <groupId>javax.servlet</groupId>
+                <artifactId>javax.servlet-api</artifactId>
+                <version>${servlet-api.version}</version>
+                <scope>provided</scope>
+            </dependency>
+            <dependency>
+                <groupId>javax.servlet</groupId>
+                <artifactId>jstl</artifactId>
+                <version>${jstl.version}</version>
+            </dependency>
+            <!-- Servlet End -->
+
+            <!-- Log Begin -->
+            <dependency>
+                <groupId>org.slf4j</groupId>
+                <artifactId>slf4j-api</artifactId>
+                <version>${slf4j.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>org.slf4j</groupId>
+                <artifactId>slf4j-log4j12</artifactId>
+                <version>${slf4j.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>org.slf4j</groupId>
+                <artifactId>jcl-over-slf4j</artifactId>
+                <version>${slf4j.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>org.slf4j</groupId>
+                <artifactId>jul-to-slf4j</artifactId>
+                <version>${slf4j.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>log4j</groupId>
+                <artifactId>log4j</artifactId>
+                <version>${log4j.version}</version>
+            </dependency>
+            <!-- Log End -->
+
+            <!-- Commons Begin -->
+            <dependency>
+                <groupId>org.apache.commons</groupId>
+                <artifactId>commons-lang3</artifactId>
+                <version>${commons-lang3.version}</version>
+            </dependency>
+            <!-- Commons End -->
+        </dependencies>
+    </dependencyManagement>
+
+    <build>
+        <plugins>
+            <!-- Compiler 插件, 设定 JDK 版本 -->
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-compiler-plugin</artifactId>
+                <version>3.7.0</version>
+                <configuration>
+                    <source>${java.version}</source>
+                    <target>${java.version}</target>
+                    <encoding>${project.build.sourceEncoding}</encoding>
+                    <showWarnings>true</showWarnings>
+                </configuration>
+            </plugin>
+        </plugins>
+
+        <!-- 资源文件配置 -->
+        <resources>
+            <resource>
+                <directory>src/main/java</directory>
+                <excludes>
+                    <exclude>**/*.java</exclude>
+                </excludes>
+            </resource>
+            <resource>
+                <directory>src/main/resources</directory>
+            </resource>
+        </resources>
+    </build>
+</project>
+```
+
+我们分段来查看这个文件：
+
+1. 首先是 <parent> 标签：这个标签中的内容指向了工程的目录；
+2. 接着是 <dependencyManagement> 标签：这个标签中可以配置多个 <dependency> 的标签，但是只是一种『声明』的作用，不会真正把 jar 包下载到项目中;
+3. <build> 标签的作用是在将项目打包成为工程的时候，所涉及的一些“动作”：在上面的例子中，我们可以看到有两个额外添加的功能：① 指定 jdk 版本为 1.8； ② 将类路径（以及子路径）中的资源文件全部打包；
 
 
 
-最后，一个很重要的步骤就是“检查”——在移动完成一个小阶段以后，就要检查是不是有什么错漏或者冗余。如果发现了错漏或冗余，就要及时改正。
+#### 3.4.4 创建
+
+
+
+
+
+#### 3.5.x 回顾
+
+我们回顾上面整个步骤，可以发现，经过
+
+
+
+> 思考：在“复制粘贴”代码的顺序
+>
+> -**场景：**
+>
+> 假设现在有一个旧项目，这个旧项目的很多代码需要迁移到新的项目中去；新项目和旧项目中存在很多相似的地方，但是也存在不少相异之处；我们需要把旧项目中的代码按照新项目的项目架构（或者其他规则）迁移到新项目中去。那么，==应该如何才能更快、更有效、更省力地完成代码的迁移呢==？我们现有的工具是一个集成开发环境，在这个环境中含有代码的语法提示等功能。
+>
+> 
+>
+> 通过上面的描述，大概可以抽象出这样一个问题：在一个集成开发环境中，如何合理安排顺序可以使得把旧代码迁移到新代码的过程中更加有效、不容易出错？
+>
+> 
+>
+> 目前想到的一个方式就是按照“入口顺序”：比如说在一个旧项目中，总会有若干个==“入口文件”==，具体距离就是 SSM 项目中的 web.xml 。另外还有一些就是 ==“字典索引”==类的文件，例如在 Spring 文件引入了子 Spring 文件。这个父 Spring 文件就是“字典索引”文件。
+>
+> 我们在移动项目的过程中，先把==“入口文件”以及“字典索引文件”==移动到新项目中，然后利用集成开发环境的语法提示功能来进行修正错误。错误有的时候是因为缺少文件而导致的，而这个文件又会依赖其他的文件，因此，继续利用语法提示功能将缺少的文件补入到新项目中。
+>
+> 
+>
+> 此外，可能旧文件到新文件可能需要转化规则，我们需要先构想转化规则，再实际去移动文件。转化的规则越直观越好。例如
+>
+> 最后，一个很重要的步骤就是“检查”——在移动完成一个小阶段以后，就要检查是不是有什么错漏或者冗余。如果发现了错漏或冗余，就要及时改正。
+>
+
+
+
+## 四、Mybatis 
+
+### 4.1 Mybatis 简介
+
+参考网站 https://funtl.com/zh/mybatis/#%E6%9C%AC%E8%8A%82%E8%A7%86%E9%A2%91
+
+
+
+
+
+### 4.2 Spring 整合 Druid 
+
+1. 添加依赖：先往 my-shop-dependencies 项目中引入，再在其他实际项目中引入；
 
 
 
@@ -725,9 +911,93 @@ public final class CookieUtils {
 
 
 
+![image-20200204211430218](01-单体应用：my-shop笔记.assets/image-20200204211430218.png)
+
+### 4.3 Spring 整合 Mybatis
+
+记得检查扫描的 dao 文件所在的路径是否正确。
 
 
 
+### 4.4 Mybatis 实现 CRUD 功能
+
+1. 如果一张表中有几十个字段，如何快速构造一个 insert 语句？
 
 
+
+### 4.5 实现首页布局
+
+1. 依据自己想要的功能，逐步逐步从模板 html 中复制对应的代码片段；
+2. 当复制完成代码片段以后，将界面显示的东西改为业务的字段；
+3. 用户列表页面；
+4. 封装通用的 JSP 模板；
+
+
+
+### 4.6 实现“用户查询列表”功能
+
+1. 新建一个 JSP 页面，指定菜单中的某个子菜单的链接跳转到这个页面；
+2. 在 BootStrap 模板中找一个表格，表格中先显示固定内容，然后再使用 EL 表达式把数据库中的内容展示上去；
+3. 调整页面布局，多添加 “查看”、“编辑”、“删除”三个功能按钮；
+4. 再添加“导入”、“导出”、“新增”、“删除全部”四个按钮；
+
+
+
+### 4.7 完成新增/编辑功能
+
+前端方面：“查看”、“新增”、“编辑”公用同一个页面；页面的标题通过 JSP 来区分。
+
+控制器：一个方法跳转到 form 页面；“新增”、“编辑”两个功能复用同一个方法：save
+
+- 如果 save 成功：重定向到 用户列表界面；
+  ![image-20200206110558150](01-单体应用：my-shop笔记.assets/image-20200206110558150.png)
+- 如果 save 失败，再转发到当前的页面；
+
+业务层：通过 ID 是否为 null 来判断是“新增”还是“编辑”；
+
+接着统一封装返回值。
+
+使用表单标签完成数据回显功能（目前不需要，如果要的话，可以观看视频“使用 Spring MVC 表单标签简化表单开发”）。
+
+
+
+> 注意：在需要自己编写前端以及后端的时候，先写完后端的所有校验，再写前端的校验。
+
+
+
+**前端校验：**
+
+前端校验我们使用 jquery validation 实现。
+
+首先需要在 footer 里面引入三个 js 文件：自定义、原来的以及本地化的。
+
+在指定哪个字段是必填的，接着再利用 js 编写初始化的过程
+
+
+
+- js 编写过程：
+
+  - 首先确定样式：从 BootStrap 中复制样式并使得样式生效；
+
+  - 接着对比新样式和原来样式，知道新样式多出来的部分：
+
+    ```js
+    <form:input path="username" class="form-control required" placeholder="用户名" />
+    
+    $(function () {
+        $("#inputForm").validate({
+            errorElement: 'span',
+            errorClass: 'help-block',
+    
+            errorPlacement: function (error, element) {
+                element.parent().parent().attr("class", "form-group has-error");
+                error.insertAfter(element);
+            }
+        });
+    });
+    ```
+
+  - 然后编写一个“初始化函数”，函数体直接打印一句话即可。
+
+  - 接着编写自定义的 样式属性、拼接对应的
 
