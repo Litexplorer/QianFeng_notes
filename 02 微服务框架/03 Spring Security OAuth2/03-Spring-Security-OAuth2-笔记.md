@@ -62,7 +62,7 @@ Spring Security 是一个**<u>安全框架</u>**，前身是 Acegi Security，�
 - **认证服务器（Authorization server）：** 即服务提供商专门用来处理认证的服务器，简单点说就是登录功能（验证用户的账号密码是否正确以及分配相应的权限）
 - **资源服务器（Resource server）：** 即服务提供商存放用户生成的资源的服务器。它与认证服务器，可以是同一台服务器，也可以是不同的服务器。简单点说就是资源的访问入口，比如上节中提到的“云笔记服务”和“云相册服务”都可以称之为资源服务器。
 
-![image-20200510124130587](03-Spring-Security-oAuth2-笔记.assets/image-20200510124130587.png)
+![image-20200510124130587](./03-Spring-Security-oAuth2-笔记.assets/image-20200510124130587.png)
 
 > 注意：**第三方应用程序**：包括自家的 APP 也是；你自己的 APP 也是第三方
 
@@ -72,7 +72,7 @@ Spring Security 是一个**<u>安全框架</u>**，前身是 Acegi Security，�
 
 oAuth 在 "客户端" 与 "服务提供商" 之间，设置了一个授权层（authorization layer）。"客户端" 不能直接登录 "服务提供商"，只能登录授权层，以此将用户与客户端区分开来。"客户端" 登录授权层所用的令牌（token），与用户的密码不同。用户可以在登录的时候，指定授权层令牌的权限范围和有效期。"客户端" 登录授权层以后，"服务提供商" 根据令牌的权限范围和有效期，向 "客户端" 开放用户储存的资料。
 
-![img](03-Spring-Security-oAuth2-笔记.assets/Lusifer_201904010001.png)
+![img](./03-Spring-Security-oAuth2-笔记.assets/Lusifer_201904010001.png)
 
 
 
@@ -150,7 +150,7 @@ http://www.funtl.com/refresh?refresh_token=&client_id=&client_secret=
 
 在者中场景下，应用是没有持久化存储的能力的。因此，按照 oAuth2.0 的规定，这种应用是拿不到 Refresh Token 的。授权流程如下所示：
 
-![img](03-Spring-Security-OAuth2-笔记.assets/Lusifer_201904010002.png)
+![img](./03-Spring-Security-OAuth2-笔记.assets/Lusifer_201904010002.png)
 
 这种模式下，`access_token` 容易泄露且不可刷新。
 
@@ -168,7 +168,7 @@ https://www.funtl.com/exchange?code=&client_id=&client_secret=
 
 需要传入 `code`、`client_id` 以及 `client_secret`。验证通过后，返回 `access_token` 和 `refresh_token`。一旦换取成功，`code` 立即作废，不能再使用第二次。流程图如下：
 
-![img](03-Spring-Security-OAuth2-笔记.assets/Lusifer_201904010003.png)
+![img](./03-Spring-Security-OAuth2-笔记.assets/Lusifer_201904010003.png)
 
 这个 code 的作用是保护 token 的安全性。上一节说到，简单模式下，token 是不安全的。这是因为在第 4 步当中直接把 token 返回给应用。而这一步容易被拦截、窃听。引入了 code 之后，即使攻击者能够窃取到 code，但是由于他无法获得应用保存在服务器的 `client_secret`，因此也无法通过 code 换取 token。而第 5 步，为什么不容易被拦截、窃听呢？这是因为，首先，这是一个从服务器到服务器的访问，黑客比较难捕捉到；其次，这个请求通常要求是 https 的实现。即使能窃听到数据包也无法解析出内容。
 
