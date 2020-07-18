@@ -628,6 +628,273 @@ Query OK, 0 rows affected (0.00 sec)
 
 
 
+## 九、Linux 磁盘扩容
+
+### 9.1 基本概念
+
+- 物理卷：可以在上面建立卷组的媒介，也可以是硬盘本身或者回环文件。物理卷包括一个特殊的 header，其余部分被切割为一块块物理区域；
+- 卷组：将一组物理卷收集成为一个管理单元；
+- 逻辑卷：虚拟分区，由物理区域组成；
+- 物理区域：硬盘可供指派给逻辑卷的最小单位（通常为 4MB）；
+
+
+
+如果没有选择“支持磁盘扩容技术”，当 MySQL 数据库往磁盘 A 写数据的时候，再增加一个磁盘 B，MySQL 是无法往磁盘 B 写数据的（因为这是物理上隔离的两个磁盘）。
+
+当选择了“支持磁盘扩容技术”以后，MySQL 直接挂载在 vg 上，vg 是一个逻辑上的概念，利用 vg，可以通过一定的算法向真正的磁盘进行写操作。可以这么理解：vg 实现了磁盘地址映射。
+
+![image-20200718210601352](02-Linux-简介与基本操作.assets/image-20200718210601352.png)
+
+为虚拟机多分配了一个磁盘以后，接下来需要将该磁盘挂载到系统中。
+
+步骤如下：
+
+查看所有的分区：
+
+```shell
+root@ubuntu:~# fdisk -l |grep '/dev'
+Disk /dev/loop0: 91 MiB, 95408128 bytes, 186344 sectors
+Disk /dev/loop1: 97 MiB, 101695488 bytes, 198624 sectors
+# 可以看到，我们多加了一块磁盘以后，命令显示的信息多了一块磁盘：sdb
+Disk /dev/sdb: 40 GiB, 42949672960 bytes, 83886080 sectors
+Disk /dev/sda: 20 GiB, 21474836480 bytes, 41943040 sectors
+/dev/sda1     2048     4095     2048   1M BIOS boot
+/dev/sda2     4096  2101247  2097152   1G Linux filesystem
+/dev/sda3  2101248 41940991 39839744  19G Linux filesystem
+Disk /dev/mapper/ubuntu--vg-ubuntu--lv: 19 GiB, 20396900352 bytes, 39837696 sectors
+
+```
+
+创建 sdb 分区
+
+```shell
+root@ubuntu:~# fdisk /dev/sdb
+
+Welcome to fdisk (util-linux 2.31.1).
+Changes will remain in memory only, until you decide to write them.
+Be careful before using the write command.
+
+Device does not contain a recognized partition table.
+Created a new DOS disklabel with disk identifier 0x07c52bc1.
+
+Command (m for help):
+
+```
+
+输入上面的命令以后，系统被阻塞了，需要输入命令
+
+```shell
+Command (m for help): n
+Partition type
+   p   primary (0 primary, 0 extended, 4 free)
+   e   extended (container for logical partitions)
+Select (default p):
+
+Using default response p.
+Partition number (1-4, default 1): 1
+First sector (2048-83886079, default 2048):
+Last sector, +sectors or +size{K,M,G,T,P} (2048-83886079, default 83886079):
+
+Created a new partition 1 of type 'Linux' and of size 40 GiB.
+# 按下 w 写入到系统中
+Command (m for help): w
+The partition table has been altered.
+Calling ioctl() to re-read partition table.
+
+```
+
+我们输入了 n ，然后根据提示语创建分区，最后按下 w 写入到系统中。
+
+此时我们再输入：
+
+```shell
+root@ubuntu:~# fdisk -l |grep '/dev'
+Disk /dev/loop0: 91 MiB, 95408128 bytes, 186344 sectors
+Disk /dev/loop1: 97 MiB, 101695488 bytes, 198624 sectors
+Disk /dev/sdb: 40 GiB, 42949672960 bytes, 83886080 sectors
+# 可以发现：系统的分区多了一个 sdb1
+/dev/sdb1        2048 83886079 83884032  40G 83 Linux
+Disk /dev/sda: 20 GiB, 21474836480 bytes, 41943040 sectors
+/dev/sda1     2048     4095     2048   1M BIOS boot
+/dev/sda2     4096  2101247  2097152   1G Linux filesystem
+/dev/sda3  2101248 41940991 39839744  19G Linux filesystem
+Disk /dev/mapper/ubuntu--vg-ubuntu--lv: 19 GiB, 20396900352 bytes, 39837696 sectors
+
+```
+
+格式化 sdb1：
+
+```shell
+root@ubuntu:~# mkfs -t ext4 /dev/sdb1
+mke2fs 1.44.1 (24-Mar-2018)
+Creating filesystem with 10485504 4k blocks and 2621440 inodes
+Filesystem UUID: 914d970b-7204-424e-a606-656bbf16ddbd
+Superblock backups stored on blocks:
+        32768, 98304, 163840, 229376, 294912, 819200, 884736, 1605632, 2654208,
+        4096000, 7962624
+
+Allocating group tables: done
+Writing inode tables: done
+Creating journal (65536 blocks): done
+Writing superblocks and filesystem accounting information: done
+
+```
+
+此时，我们可以创建逻辑卷（PV）了：
+
+```shell
+root@ubuntu:~# pvcreate /dev/sdb1
+WARNING: ext4 signature detected on /dev/sdb1 at offset 1080. Wipe it? [y/n]: y
+  Wiping ext4 signature on /dev/sdb1.
+  Physical volume "/dev/sdb1" successfully created.
+
+```
+
+创建完成以后，再查看卷组：
+
+```shell
+root@ubuntu:~# pvscan
+  PV /dev/sda3   VG ubuntu-vg       lvm2 [<19.00 GiB / 0    free]
+  PV /dev/sdb1                      lvm2 [<40.00 GiB]
+  Total: 2 [<59.00 GiB] / in use: 1 [<19.00 GiB] / in no VG: 1 [<40.00 GiB]
+
+```
+
+可以发现：sdb1 已经被挂载到 pv 中去了。
+
+
+
+### 扩容 VG
+
+查看 VG
+
+```shell
+root@ubuntu:~# vgdisplay
+  --- Volume group ---
+  VG Name               ubuntu-vg
+  System ID
+  Format                lvm2
+  Metadata Areas        1
+  Metadata Sequence No  2
+  VG Access             read/write
+  VG Status             resizable
+  MAX LV                0
+  Cur LV                1
+  Open LV               1
+  Max PV                0
+  Cur PV                1
+  Act PV                1
+  # 可以看到：现在的 VG 容量是 19.00G
+  VG Size               <19.00 GiB
+  PE Size               4.00 MiB
+  Total PE              4863
+  Alloc PE / Size       4863 / <19.00 GiB
+  Free  PE / Size       0 / 0
+  VG UUID               GxiPlo-9c18-Sv6S-C928-reuq-x3XD-FBZdsP
+```
+
+扩容 VG
+
+```shell
+root@ubuntu:~# vgextend  ubuntu-vg /dev/sdb1
+  Volume group "ubuntu-vg" successfully extended
+
+```
+
+上面的  ubuntu-vg 就是根据上一条命令的 VG Name 的值得到的；
+
+再次查看 VG：
+
+```shell
+root@ubuntu:~# vgdisplay
+  --- Volume group ---
+  VG Name               ubuntu-vg
+  System ID
+  Format                lvm2
+  Metadata Areas        2
+  Metadata Sequence No  3
+  VG Access             read/write
+  VG Status             resizable
+  MAX LV                0
+  Cur LV                1
+  Open LV               1
+  Max PV                0
+  Cur PV                2
+  Act PV                2
+  # 现在可以看到，VG 的容量已经增加了
+  VG Size               58.99 GiB
+  PE Size               4.00 MiB
+  Total PE              15102
+  Alloc PE / Size       4863 / <19.00 GiB
+  Free  PE / Size       10239 / <40.00 GiB
+  VG UUID               GxiPlo-9c18-Sv6S-C928-reuq-x3XD-FBZdsP
+
+```
+
+
+
+### 扩容 LV
+
+查看 LV
+
+```shell
+lvdisplay
+
+# 输出如下
+--- Logical volume ---
+# 我们需要用到 LV Path
+LV Path                /dev/ubuntu-vg/ubuntu-lv
+LV Name                ubuntu-lv
+VG Name                ubuntu-vg
+LV UUID                e2fKkR-oZeH-WV2A-ltCi-P76v-N9yv-aUtIg1
+LV Write Access        read/write
+LV Creation host, time ubuntu-server, 2019-05-14 03:13:57 +0800
+LV Status              available
+# open                 1
+LV Size                <19.00 GiB
+Current LE             4863
+Segments               1
+Allocation             inherit
+Read ahead sectors     auto
+- currently set to     256
+Block device           253:0
+```
+
+扩容 LV：
+
+```shell
+# 按固定大小追加
+lvextend -L +10G /dev/ubuntu-vg/ubuntu-lv
+
+# 按百分比追加
+lvextend -l +100%FREE /dev/ubuntu-vg/ubuntu-lv
+
+# 输出如下
+Size of logical volume ubuntu-vg/ubuntu-lv changed from <19.00 GiB (4863 extents) to 38.99 GiB (9982 extents).
+Logical volume ubuntu-vg/ubuntu-lv successfully resized.
+```
+
+刷新分区：
+
+```shell
+resize2fs /dev/ubuntu-vg/ubuntu-lv
+
+# 输出如下
+Filesystem at /dev/ubuntu-vg/ubuntu-lv is mounted on /; on-line resizing required
+old_desc_blocks = 3, new_desc_blocks = 5
+The filesystem on /dev/ubuntu-vg/ubuntu-lv is now 10221568 (4k) blocks long.
+```
+
+
+
+> **注意：** 不要卸载扩容的磁盘，可能出现丢失数据或是系统无法启动
+
+
+
+**总结：**上面的操作主要分为以下几步：① 挂载新磁盘； ② 格式化新磁盘，并为磁盘分区（sdb1）； ③ 扩容 PV； ④ 扩容 VG； ⑤扩容 LV；
+
+
+
 
 
 多看看这部分视频
