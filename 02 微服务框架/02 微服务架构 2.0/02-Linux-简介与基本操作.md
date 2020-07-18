@@ -74,13 +74,32 @@ Linux 目录管理如下表所示：
 
 常见命令：
 
-|        说明        |  命令  | 备注 |
-| :----------------: | :----: | :--: |
-| 查看列表的详细信息 | ls -al |      |
-|                    |        |      |
-|                    |        |      |
-
-
+| 命令  |                说明                |                      语法                       | 参数  |              参数说明              |
+| :---: | :--------------------------------: | :---------------------------------------------: | :---: | :--------------------------------: |
+|  ls   |         显示文件和目录列表         |             ls [-alrtAFR] [name...]             |       |                                    |
+|       |                                    |                                                 |  -l   |         列出文件的详细信息         |
+|       |                                    |                                                 |  -a   | 列出当前目录所有文件，包含隐藏文件 |
+| mkdir |              创建目录              |               mkdir [-p] dirName                |       |                                    |
+|       |                                    |                                                 |  -p   |   父目录不存在情况下先生成父目录   |
+|  cd   |              切换目录              |                  cd [dirName]                   |       |                                    |
+| touch |           生成一个空文件           |                                                 |       |                                    |
+| echo  |         生成一个带内容文件         |      echo abcd > 1.txt，echo 1234 >> 1.txt      |       |                                    |
+|  cat  |          显示文本文件内容          | cat [-AbeEnstTuv] [--help] [--version] fileName |       |                                    |
+|  cp   |           复制文件或目录           |            cp [options] source dest             |       |                                    |
+|  rm   |              删除文件              |              rm [options] name...               |       |                                    |
+|       |                                    |                                                 |  -f   |         强制删除文件或目录         |
+|       |                                    |                                                 |  -r   |     同时删除该目录下的所有文件     |
+|  mv   |           移动文件或目录           |            mv [options] source dest             |       |                                    |
+| find  |     在文件系统中查找指定的文件     |                                                 |       |                                    |
+|       |                                    |                                                 | -name |               文件名               |
+| grep  | 在指定的文本文件中查找指定的字符串 |                                                 |       |                                    |
+| tree  |     用于以树状图列出目录的内容     |                                                 |       |                                    |
+|  pwd  |          显示当前工作目录          |                                                 |       |                                    |
+|  ln   |             建立软链接             |                                                 |       |                                    |
+| more  |        分页显示文本文件内容        |                                                 |       |                                    |
+| head  |          显示文件开头内容          |                                                 |       |                                    |
+| tail  |          显示文件结尾内容          |                                                 |       |                                    |
+|       |                                    |                                                 |  -f   |              跟踪输出              |
 
 > 命令都是熟能生巧的过程，只有通过多练习这一条路。在练习的时候，先看命令的中文意思，然后再根据中文回忆对应的命令以及参数，这时更加容易记住。
 
@@ -126,6 +145,46 @@ Linux 目录管理如下表所示：
 > Windows 窗口 → （专业术语称之为“句柄”） → 监听句柄，识别键盘输入 → 盗号
 
 
+
+### 3.2 Linux 压缩/解压命令
+
+| 命令 |                    语法                     | 参数 |            参数说明             |
+| :--: | :-----------------------------------------: | :--: | :-----------------------------: |
+| tar  | tar [-cxzjvf] 压缩打包文档的名称 欲打包目录 |      |                                 |
+|      |                                             |  -c  |   建立一个归档文件的参数指令    |
+|      |                                             |  -x  |   解开一个归档文件的参数指令    |
+|      |                                             |  -z  |      是否需要用 gzip 压缩       |
+|      |                                             |  -j  |      是否需要用 bzip2 压缩      |
+|      |                                             |  -v  |      压缩的过程中显示文件       |
+|      |                                             |  -f  | 使用档名，在 f 之后要立即接档名 |
+|      |                                             | -tf  |     查看归档文件里面的文件      |
+
+- 案例
+  - 压缩：`tar -zcvf test.tar.gz test\`
+  - 解压：`tar -zxvf test.tar.gz`
+
+
+
+| 命令 |                语法                | 参数 |                           参数说明                           |
+| :--: | :--------------------------------: | :--: | :----------------------------------------------------------: |
+| gzip | gzip [选项] 压缩（解压缩）的文件名 |      |                                                              |
+|      |                                    |  -d  |                            解压缩                            |
+|      |                                    |  -l  | 对每个压缩文件，显示压缩文件的大小，未压缩文件的大小，压缩比，未压缩文件的名字 |
+|      |                                    |  -v  |         对每一个压缩和解压的文件，显示文件名和压缩比         |
+|      |                                    | -num | 用指定的数字num调整压缩的速度，-1或--fast表示最快压缩方法（低压缩比），-9或--best表示最慢压缩方法（高压缩比）。系统缺省值为6 |
+
+> 压缩文件后缀为 gz
+
+
+
+| 命令  |     语法     | 参数 |                           参数说明                           |
+| :---: | :----------: | :--: | :----------------------------------------------------------: |
+| bzip2 | bzip2 [-cdz] |      |                                                              |
+|       |              |  -d  |                            解压缩                            |
+|       |              |  -z  |                           压缩参数                           |
+|       |              | -num | 用指定的数字num调整压缩的速度，-1或--fast表示最快压缩方法（低压缩比），-9或--best表示最慢压缩方法（高压缩比）。系统缺省值为6 |
+
+> 压缩文件后缀为 bz2
 
 ## 四、Linux Vim 编辑器
 
@@ -319,8 +378,255 @@ APT 的源文件为 /etc/apt 目录下的 sources.list 文件。
 
 我们可以修改 Ubuntu 的数据源为国内的数据源，操作步骤如下：
 
-1. 查看系统版本 → v
+1. 查看系统版本 ：
+
+   ```shell
+   root@ubuntu:~# lsb_release -a
+   No LSB modules are available.
+   Distributor ID: Ubuntu
+   Description:    Ubuntu 18.04.2 LTS
+   Release:        18.04
+   Codename:       bionic
+   ```
+
+   > **注意：** Codename 为 `bionic`，该名称为我们 Ubuntu 系统的名称，修改数据源需要用到该名称
+
 2. 修改数据源：（注意：版本号必须匹配）
+
+   ```shell
+   vi /etc/apt/sources.list
+   ```
+
+   删除全部内容并修改为
+
+   ```
+   deb http://mirrors.aliyun.com/ubuntu/ bionic main restricted universe multiverse
+   deb http://mirrors.aliyun.com/ubuntu/ bionic-security main restricted universe multiverse
+   deb http://mirrors.aliyun.com/ubuntu/ bionic-updates main restricted universe multiverse
+   deb http://mirrors.aliyun.com/ubuntu/ bionic-backports main restricted universe multiverse
+   ```
+
+   更新数据源
+
+   ```
+   apt-get update
+   ```
+
+### 7.3 常用 APT 命令
+
+- 安装软件包：`apt-get install <Package Name>`
+- 删除软件包：`apt-get remove <Package Name>`
+- 更新软件包列表：`apt-get update`
+- 升级有可用更新的系统(**慎用**)：`apt-get upgrade`
+- 搜索：`apt-cache search <Package Name>`
+- 获取包信息：`apt-cache show <Package Name>`
+- 删除包及配置文件：`apt-get remove <Package Name> --purge`
+- 了解使用依赖：`apt-cache depends <Package Name>`
+- 查看被哪些包依赖：`apt-cache rdepends <Package Name>`
+- 安装相关的编译环境：`apt-get build-dep <Package Name>`
+- 下载源代码：`apt-get source <Package Name>`
+- 清理无用的包：`apt-get clean && apt-get autoclean`
+- 检查是否有损坏的依赖：`apt-get check`
+
+
+
+## 八、Linux 部署应用程序（Tomcat）
+
+### 8.1 在 Linux 上安装 Java 环境
+
+**解压并移动到指定的目录**：
+
+1. 解压：` tar -zxvf jdk-8u152-linux-x64.tar.gz`
+2. 创建目录：在` /usr/local` 目录下：` mkdir java`；
+3. 移动文件：`mv jdk1.8.0_152/ java/`
+4. 设置所有者为当前用户： `chown -R root:root /usr/local/java/`；
+
+**配置环境变量**：
+
+1. 配置系统环境变量：
+
+   ```shell
+   vi /etc/environment
+   添加：
+   export JAVA_HOME=/usr/local/java/jdk1.8.0_152
+   export JRE_HOME=/usr/local/java/jdk1.8.0_152/jre
+   export CLASSPATH=$CLASSPATH:$JAVA_HOME/lib:$JAVA_HOME/jre/lib
+   ```
+
+2. 配置用户环境变量：
+
+   ```shell
+   vi /etc/profile
+   添加：
+   JAVA_HOME=/usr/local/java/jdk1.8.0_152
+   PATH=$PATH:$HOME/bin:$JAVA_HOME/bin
+   export JAVA_HOME
+   export PATH
+   ```
+
+3. 刷新用户环境变量：
+
+   ```shell
+   source /etc/profile
+   ```
+
+4. 查看是否成功：
+
+   ```shell
+   java -version
+   当出现以下的文字时，说明已经添加到环境变量成功：
+   
+   root@ubuntu:/usr/local/java/jdk1.8.0_152# java -version
+   java version "1.8.0_152"
+   Java(TM) SE Runtime Environment (build 1.8.0_152-b16)
+   Java HotSpot(TM) 64-Bit Server VM (build 25.152-b16, mixed mode)
+   
+   ```
+
+### **配置 tomcat**：
+
+直接解压并进入到解压目录后的 `bin `目录，启动即可。
+
+
+
+### 8.3 安装 MySQL
+
+运行命令：
+
+```shell
+ apt-get update
+apt-get install mysql-server
+```
+
+即可安装 MySQL 数据库
+
+安装完成以后，查看 MySQL 服务是否启动：
+
+```shell
+ systemctl status mysql
+ 如果显示：
+ ● mysql.service - MySQL Community Server
+   Loaded: loaded (/lib/systemd/system/mysql.service; enabled; vendor preset: enabled)
+   Active: active (running) since Sat 2020-07-18 08:38:12 UTC; 2min 58s ago
+ Main PID: 75036 (mysqld)
+    Tasks: 27 (limit: 4633)
+   CGroup: /system.slice/mysql.service
+           └─75036 /usr/sbin/mysqld --daemonize --pid-file=/run/mysqld/mysqld.pid
+
+Jul 18 08:38:12 ubuntu systemd[1]: Starting MySQL Community Server...
+Jul 18 08:38:12 ubuntu systemd[1]: Started MySQL Community Server.
+
+```
+
+可以看到 MySQL 的状态是：『running』，此时服务是启动的。
+
+
+
+**登陆到 MySQL 中：**
+
+```shell
+root@ubuntu:/usr/local/apache-tomcat-8.5.23# mysql -u root -p
+Enter password:
+Welcome to the MySQL monitor.  Commands end with ; or \g.
+Your MySQL connection id is 2
+Server version: 5.7.30-0ubuntu0.18.04.1 (Ubuntu)
+
+Copyright (c) 2000, 2020, Oracle and/or its affiliates. All rights reserved.
+
+Oracle is a registered trademark of Oracle Corporation and/or its
+affiliates. Other names may be trademarks of their respective
+owners.
+
+Type 'help;' or '\h' for help. Type '\c' to clear the current input statement.
+
+mysql>
+
+```
+
+此时表示已经进入到 MySQL 中
+
+
+
+### 8.4 登陆 MySQL 
+
+#### 8.4.1 使用 Navicat 连接 MySQL
+
+在上面的基础上，我们使用 Navicat 连接到虚拟机的 MySQL 服务时，发现出现以下的问题：
+
+![image-20200718165708341](02-Linux-简介与基本操作.assets/image-20200718165708341.png)
+
+我们根据错误码“10061” 寻找答案：https://blog.csdn.net/zhoucheng05_13/article/details/78589025
+
+修改配置文件：
+
+```shell
+vim /etc/mysql/mysql.conf.d/mysqld.cnf
+将 『bind-address = 127.0.0.1』 注释掉即可
+```
+
+重启 MySQL 服务：
+
+```shell
+systemctl restart mysql
+```
+
+
+
+此时，使用 Navicat 连接 MySQL ，发现出现另外一个错误“1130”：
+
+![img](https://img-blog.csdn.net/20170110151010463?watermark/2/text/aHR0cDovL2Jsb2cuY3Nkbi5uZXQvbHZfc2hpanVu/font/5a6L5L2T/fontsize/400/fill/I0JBQkFCMA==/dissolve/70/gravity/Center)
+
+根据错误码“1130” 发现，该错误是由于   **出现这种情况是因为mysql服务器出于安全考虑，默认只允许本地登录数据库服务器，如果不常用我们还是关了这个功能的好。**
+
+登陆到 MySQL 数据库中，并使用 mysql 库：
+
+```mysql
+mysql>update user set host='%' where host='localhost' and user='root';
+mysql>flush privileges;
+```
+
+
+
+接着使用 Navicat 连接 MySQL，此时发现仍然登陆不上，错误代码为：“1698”。这个是因为： **root的plugin被修改成了auth_socket，用密码登陆的plugin应该是mysql_native_password**。
+
+我们查询对应的数据：
+
+```mysql
+mysql> select user, plugin from mysql.user;
++-----------+-----------------------+
+| user      | plugin                |
++-----------+-----------------------+
+| root      | auth_socket           |
+| mysql.sys | mysql_native_password |
+| dev       | mysql_native_password |
++-----------+-----------------------+
+3 rows in set (0.01 sec)
+```
+
+可以发现：root 用户使用的登陆方式是『auth_socket』，因此需要修改 root 用户的登陆方式。
+
+```mysql
+mysql> update mysql.user set authentication_string=PASSWORD('newPwd'), plugin='mysql_native_password' where user='root';
+Query OK, 1 row affected, 1 warning (0.00 sec)
+Rows matched: 1  Changed: 1  Warnings: 1
+
+mysql> flush privileges;
+Query OK, 0 rows affected (0.00 sec)
+```
+
+再次使用 Navicat 连接 MySQL，发现连接成功了！
+
+
+
+### 8.5 部署应用程序
+
+一般的部署步骤：将项目打成 war 包 → 将 war 包放到服务器的 tomcat 目录下 → 重启 tomcat 服务。
+
+实际的部署步骤：将项目打成 war 包 → 在本地将 war 包解压 → 将解压目录替换服务器的 tomcat 的对应目录。
+
+> 因为 tomcat 在解压 war 包以后，会先把原来的项目先删除，再把 war 包中的项目替换原来的。此时（在部署的过程中），如果有文件正在上传，并且这个文件存放到了原来的项目路径下，那么该文件就会丢失。
+
+
 
 
 
