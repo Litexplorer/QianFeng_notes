@@ -172,13 +172,39 @@ Linux 操作系统时一个多用户操作系统，它允许多用户同时登�
 
 
 
-默认情况下，root 用户不允许远程连接，需要修改配置才能进行远程连接
+默认情况下，root 用户不允许远程连接，需要修改配置才能进行远程连接。具体操作步骤如下：
 
+1. 使用管理员用户登陆 Ubuntu 系统；
 
+2. 允许root用户远程登录：修改ssh服务配置文件：
 
-[修改 root 密码]()
+   ```shell
+   sudo vi /etc/ssh/sshd_config
+   ```
 
+   调整`PermitRootLogin`参数值为`yes`
 
+3. 修改 root 用户密码：
+
+   ```shell
+   chen@ubuntu:~$ su
+   Password:
+   root@ubuntu:/home/chen# passwd root
+   Enter new UNIX password:
+   Retype new UNIX password:
+   passwd: password updated successfully
+   root@ubuntu:/home/chen#
+   
+   ```
+
+4. 重启 ssh 服务：
+
+   ```shell
+   service sshd restart  # 或者
+   /etc/initd.d/sshd restart
+   ```
+
+最后使用远程客户端、以 root 用户连接即可。
 
 ### 5.3 用户账户说明
 
@@ -238,7 +264,63 @@ Linux 操作系统时一个多用户操作系统，它允许多用户同时登�
 
 ### 6.2 更改操作权限
 
+#### 6.2.1 chown 命令
 
+这个命令时 change owner 的缩写，主要作用是：改变文件或者目录所有者（『所有者』包括：用户和用户组）。
+
+具体用法如下：
+
+1. `chown [-R] 用户名称 文件或目录`；
+2. `chown [-R] 用户名称 用户组名称 文件或目录`；
+
+> `-R` 进行递归式权限更改：将该目录下的所有文件、子目录都进行更新。
+
+#### 6.2.2 chmod命令
+
+改变访问权限。具体用法如下：
+
+1. `chmod [who] [+ | - | =] [mode] 文件名`
+
+例子：
+
+```sehlll
+
+```
+
+
+
+### 6.3 数字设定法
+
+数字设定法中，数字所表示的含义：
+
+- 0 表示没有任何权限
+- 1 表示有可执行的权限；
+- 2 表示有可写的权限；
+- 4 表示有可读的权限；
+
+例子：
+
+```shell
+chmod 755 a0.txt
+表示：改变 a0.txt 文件的权限：当前用户具有『可读可写可执行』的权限；当前用户组具有『可读、可执行』权限； 其他用户组具有『可读可执行』的权限。
+```
+
+
+
+## 七、Linux 包管理
+
+### 7.1 概述
+
+APT（Advanced Packaging Tool）是 Debian/Ubuntu 类 Linux 系统中的软件包管理程序，使用它可以找到对应的软件包，而且安装、卸载、更新都方便快捷。同时，使用 APT 可以对 Ubuntu 进行升级。
+
+APT 的源文件为 /etc/apt 目录下的 sources.list 文件。
+
+### 7.2 修改数据源
+
+我们可以修改 Ubuntu 的数据源为国内的数据源，操作步骤如下：
+
+1. 查看系统版本 → v
+2. 修改数据源：（注意：版本号必须匹配）
 
 
 
