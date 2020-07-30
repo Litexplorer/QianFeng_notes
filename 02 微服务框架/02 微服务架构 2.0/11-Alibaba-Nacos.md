@@ -359,3 +359,14 @@ public String echo(@PathVariable String str) {
 ![image-20200729183809615](11-Alibaba-Nacos.assets/image-20200729183809615.png)
 
 说明我们通过 `RestTemplate `实现了服务名调用。
+
+
+
+## 四、Alibaba Nacos 使用 Feign 客户端
+
+### 4.11 什么是 Feign
+
+
+
+
+
