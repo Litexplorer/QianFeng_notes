@@ -426,3 +426,100 @@ public interface EchoService {
 我们启动服务提供者以及服务消费者两个项目，然后通过访问消费者的请求，可以得到从提供者返回的消息：
 
 ![image-20200807142731408](11-Alibaba-Nacos.assets/image-20200807142731408.png)
+
+
+
+### 4.3 通过 Feign 实现负载均衡
+
+#### 4.3.1 IDEA 如何运行多个服务实例
+
+- 修改 `service-provider` 服务的端口号如 8071，并启动多个实例，IDEA 中依次点击 **Run** -> **Edit Configurations** 并勾选 **Allow parallel run** 以允许 IDEA 多实例运行项目
+
+![img](11-Alibaba-Nacos.assets/Fpde-B7pVpH_PpKzuQu6gPMA0-Ck@.webp)
+
+- 再次启动 `service-provider` 实例，IDEA Spring Boot 面板可以看到
+
+![img](11-Alibaba-Nacos.assets/FpAamUxYdshLFlDgc-Nkpbysdu3s@.webp)
+
+- Nacos Server 控制台可以看到 `service-provider` 有 2 个实例
+
+![img](11-Alibaba-Nacos.assets/FlTZdqtUY6LRWl-rWBdDFSJNZMs8@.webp)
+
+
+
+### 4.3.2 实现负载均衡
+
+#### 4.3.2.1 服务提供者添加方法
+
+首先需要在服务提供者项目 service-provider 中添加方法：
+
+```java
+@Value("${server.port}")
+private String port;
+@GetMapping("/echo/lb")
+public String lb(HttpServletRequest request, HttpServletResponse response ) {
+
+    return "当前的服务的端口是：" + port;
+}
+```
+
+控制器中返回了当前服务实例的端口。
+
+#### 4.3.2.2 服务消费者添加方法
+
+服务消费者中需要调用服务提供者的方法，以及提供对外接口：
+
+**Feign 调用**
+
+在 service-consumer 的 EchoService 中添加以下 Feign 调用：
+
+```java
+@GetMapping("/echo/lb")
+String lb();
+```
+
+**对外接口：**
+
+```java
+@GetMapping("/echo/lb")
+public String lb(HttpServletRequest request, HttpServletResponse response ) {
+
+    return "从服务提供者返回的消息为：" + echoService.lb();
+}
+```
+
+#### 4.3.2.3 测试
+
+我们启动的实例为：
+
+1. 1 个 `service-consumer` 服务；
+2. 2 个 `service-provide` 服务，端口分配分别为：8070 以及 8071；
+
+启动完成以后状态如下：
+
+![image-20200807152838668](11-Alibaba-Nacos.assets/image-20200807152838668.png)
+
+接着我们访问服务消费者的接口，可以得到以下的消息：
+
+![image-20200807153019220](11-Alibaba-Nacos.assets/image-20200807153019220.png)
+
+![image-20200807153025822](11-Alibaba-Nacos.assets/image-20200807153025822.png)
+
+> 上面通过不断刷新页面，我们会发现端口号每次都会有所变化。
+
+控制台中 service-consumer 会出现以下日志
+
+![image-20200807151844074](11-Alibaba-Nacos.assets/image-20200807151844074.png)
+
+#### 4.3.2.3 总结
+
+Feign 调用只需要在服务调用方添加，当服务提供者与服务消费者同时注册到同一个注册中心的时候，它们就可以实现通信；Feign 调用时，默认会使用的负载均衡算法为：『轮询算法』。
+
+
+
+> 常见的负载均衡的策略：
+>
+> 参考[常见的负载均衡算法](https://www.jianshu.com/p/1e56ace862e7)；
+
+
+
