@@ -359,3 +359,71 @@ public String echo(@PathVariable String str) {
 ![image-20200729183809615](11-Alibaba-Nacos.assets/image-20200729183809615.png)
 
 说明我们通过 `RestTemplate `实现了服务名调用。
+
+
+
+### 3.5 使用 Feign 通信
+
+#### 3.5.1 什么是 Feign
+
+Feign 是一个声明式的伪 HTTP 客户端，它使得写 HTTP 客户端变得更简单。使用 Feign，只需要创建一个接口并注解。它具有可插拔的注解特性，可使用 Feign 注解和 JAX-RS 注解。Feign 支持可插拔的编码器和解码器。Feign 默认集成了 Ribbon，Nacos 也很好的兼容了 Feign，默认实现了负载均衡的效果
+
+- Feign 采用的是基于接口的注解
+- Feign 整合了 Ribbon
+
+
+
+#### 3.5.2 步骤
+
+使用 Feign 需要在调用方中添加依赖，然后通过注解声明调用哪一个请求即可。
+
+**添加依赖：**
+
+```xml
+<dependency>
+    <groupId>org.springframework.cloud</groupId>
+    <artifactId>spring-cloud-starter-openfeign</artifactId>
+</dependency>
+```
+
+
+
+**开在启动类中开启 Feign 功能**
+
+通过 `@EnableFeignClients` 注解开启 Feign 功能：
+
+
+
+**创建业务类，声明调用**
+
+我们当前项目中创建一个接口，在接口中加入声明式调用即可：
+
+```java
+
+/**
+ * @Author: ChromeChen
+ * @Description: 该接口用于 Feign 声明式调用
+ * @Date: Created in 14:17 2020/8/7 0007
+ * @Modified By:
+ */
+@FeignClient(value = "service-provider")	// ① 
+public interface EchoService {
+
+    @GetMapping(value = "/echo/{string}")	// ②
+    String echo(@PathVariable("string") String string);
+}
+
+```
+
+①：调用哪一个服务；
+
+②：调用的具体方法；
+
+
+
+**测试是否成功：**
+
+我们启动服务提供者以及服务消费者两个项目，然后通过访问消费者的请求，可以得到从提供者返回的消息：
+
+![image-20200807142731408](11-Alibaba-Nacos.assets/image-20200807142731408.png)
+
