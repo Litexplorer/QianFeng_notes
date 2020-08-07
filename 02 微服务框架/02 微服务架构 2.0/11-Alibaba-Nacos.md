@@ -426,4 +426,3 @@ public interface EchoService {
 我们启动服务提供者以及服务消费者两个项目，然后通过访问消费者的请求，可以得到从提供者返回的消息：
 
 ![image-20200807142731408](11-Alibaba-Nacos.assets/image-20200807142731408.png)
-
