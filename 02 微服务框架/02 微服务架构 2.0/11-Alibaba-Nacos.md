@@ -661,7 +661,7 @@ java -jar 1.0.0-SNAPSHOT.jar --spring.profiles.active=prod
 
 通过浏览器访问 http://192.168.141.132:8848/nacos ，访问 Nacos Server
 
-- 发布一个名为 `service-provider-config.yaml` 的 **测试环境** 配置
+- 发布一个名为 `service-consumer-config.yaml` 的 **测试环境** 配置
 
 ```
 spring:
@@ -686,7 +686,7 @@ management:
         include: "*"
 ```
 
-- 发布一个名为 `service-provider-config-prod.yaml` 的 **生产环境** 配置
+- 发布一个名为 `service-consumer-config-prod.yaml` 的 **生产环境** 配置
 
 ```
 spring:
@@ -746,5 +746,5 @@ spring.cloud.nacos.config.file-extension=yaml
 
 
 
-
+​	
 
