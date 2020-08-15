@@ -522,3 +522,228 @@ Feign 调用只需要在服务调用方添加，当服务提供者与服务消�
 
 
 
+## 五、Alibaba Nacos 分布式配置中心
+
+### 5.1 概述
+
+在分布式系统中，由于服务数量巨多，为了方便服务配置文件统一管理，实时更新，所以需要分布式配置中心组件
+
+### 5.2 什么是 Nacos Config
+
+Nacos 提供用于存储配置和其他元数据的 key/value 存储，为分布式系统中的外部化配置提供服务器端和客户端支持。使用 Spring Cloud Alibaba Nacos Config，您可以在 Nacos Server 集中管理你 Spring Cloud 应用的外部属性配置。
+
+Spring Cloud Alibaba Nacos Config 是 Spring Cloud Config Server 和 Client 的替代方案，客户端和服务器上的概念与 Spring Environment 和 PropertySource 有着一致的抽象，在特殊的 bootstrap 阶段，配置被加载到 Spring 环境中。当应用程序通过部署管道从开发到测试再到生产时，您可以管理这些环境之间的配置，并确保应用程序具有迁移时需要运行的所有内容。
+
+### 5.3 接入配置中心
+
+#### 5.3.1 添加依赖
+
+在服务消费者 consumer 项目中添加以下依赖：
+
+```xml
+ <!-- 分布式配置中心 -->
+<dependency>
+    <groupId>com.alibaba.cloud</groupId>
+    <artifactId>spring-cloud-starter-alibaba-nacos-config</artifactId>
+</dependency>
+```
+
+注意：不要忘记在 dependencies 项目中添加改依赖的版本管理。
+
+#### 5.3.2 使用 Nacos 控制台发布配置
+
+![img](11-Alibaba-Nacos.assets/Fv3i7ReI67lcDvL9hcfgxYletGGW@.webp)
+
+然后添加以下配置：
+
+![image-20200811170626733](11-Alibaba-Nacos.assets/image-20200811170626733.png)
+
+配置的内容为：
+
+```yaml
+spring:
+  application:
+    name: service-consumer
+  cloud:
+    nacos:
+      discovery:
+        server-addr: 192.168.150.129:8848
+
+server:
+  port: 8080
+
+management:
+  endpoints:
+    web:
+      exposure:
+        include: "*"
+
+user:
+  name: "灶门炭治郎"
+```
+
+> 在上面的配置中，如果 Data ID 没有明确写后缀名成，那么默认后缀名称为 `.properties`。
+
+#### 5.3.3 添加启动文件
+
+在项目中添加配置文件 bootstrap.properties，然后添加以下配置：
+
+```properties
+spring.application.name=service-consumer-config
+spring.cloud.nacos.config.server-addr=192.168.150.129:8848
+spring.cloud.nacos.config.file-extension=yaml
+```
+
+最后启动项目即可。
+
+
+
+#### 5.3.4 验证配置文件实时更新
+
+首先我们在控制器中加入注解：`@RefreshScope` ，在控制器中添加方法：
+
+```java
+@Value("${user.name}")
+private String username;
+
+@GetMapping("/echo/config")
+public String config(HttpServletRequest request, HttpServletResponse response ) {
+
+    return String.format("配置文件中的值为：【%s】", username);
+}
+```
+
+然后启动项目，输入对应的地址，输出：
+
+![image-20200811171751237](11-Alibaba-Nacos.assets/image-20200811171751237.png)
+
+我们在 Nacos 控制台中修改对应的键值，发布配置文件，
+
+![image-20200811171912972](11-Alibaba-Nacos.assets/image-20200811171912972.png)
+
+输出：
+
+![image-20200811171926109](11-Alibaba-Nacos.assets/image-20200811171926109.png)
+
+
+
+## 六、Alibaba Nacos 多环境配置
+
+### 6.1 概述
+
+我们在做项目开发的时候，生产环境和测试环境的一些配置可能会不一样，有时候一些功能也可能会不一样，所以我们可能会在上线的时候手工修改这些配置信息。Spring 为我们提供了 Spring Boot Profile 这个功能（Maven 也为我们提供了 Maven Profile）。我们只需要在启动的时候添加一个虚拟机参数，激活自己环境所要用的 Profile 就可以了。
+
+操作起来很简单，只需要为不同的环境编写专门的配置文件，如：`application-dev.yml`、`application-prod.yml`， 启动项目时只需要增加一个命令参数 `--spring.profiles.active=` 环境配置即可
+
+```
+java -jar 1.0.0-SNAPSHOT.jar --spring.profiles.active=prod
+```
+
+### 6.2 什么是 Nacos Config Profile（未实践）
+
+`spring-cloud-starter-alibaba-nacos-config` 在加载配置的时候，不仅仅加载了以 dataid 为 `${spring.application.name}.${file-extension:properties}` 为前缀的基础配置，还加载了 dataid 为 `${spring.application.name}-${profile}.${file-extension:properties}` 的基础配置。在日常开发中如果遇到多套环境下的不同配置，可以通过 Spring 提供的 `${spring.profiles.active}` 这个配置项来配置。
+
+#### 6.2.1 使用 Nacos Config Profile
+
+我们以 `service-provider` 项目为例，演示多环境配置效果，不要忘记依赖 Nacos Config Starter
+
+```
+<dependency>
+    <groupId>com.alibaba.cloud</groupId>
+    <artifactId>spring-cloud-starter-alibaba-nacos-config</artifactId>
+</dependency>
+```
+
+#### 6.2.2 使用控制台发布配置
+
+> **注意：** 控制台发布配置时不要加注释，否则打成 Jar 包后运行会报无法解析配置文件的错误
+
+通过浏览器访问 http://192.168.141.132:8848/nacos ，访问 Nacos Server
+
+- 发布一个名为 `service-consumer-config.yaml` 的 **测试环境** 配置
+
+```
+spring:
+  application:
+    # 服务名
+    name: service-provider
+  cloud:
+    nacos:
+      discovery:
+        # 服务注册中心
+        server-addr: 192.168.141.132:8848
+
+server:
+  # 服务端口
+  port: 8070
+
+management:
+  # 端点检查（健康检查）
+  endpoints:
+    web:
+      exposure:
+        include: "*"
+```
+
+- 发布一个名为 `service-consumer-config-prod.yaml` 的 **生产环境** 配置
+
+```
+spring:
+  application:
+    # 服务名
+    name: service-provider
+  cloud:
+    nacos:
+      discovery:
+        # 服务注册中心
+        server-addr: 192.168.141.132:8848
+
+server:
+  # 修改了上面的端口号，区分配置的不同
+  port: 8071
+
+management:
+  # 端点检查（健康检查）
+  endpoints:
+    web:
+      exposure:
+        include: "*"
+```
+
+#### 6.2.3 修改客户端配置
+
+- 创建名为 `bootstrap.properties` 的配置文件并删除之前创建的 `application.yml` 配置文件
+
+```
+spring.application.name=service-provider-config
+spring.cloud.nacos.config.server-addr=192.168.141.132:8848
+spring.cloud.nacos.config.file-extension=yaml
+```
+
+- 创建名为 `bootstrap-prod.properties` 的配置文件
+
+```
+spring.profiles.active=prod
+spring.application.name=service-provider-config
+spring.cloud.nacos.config.server-addr=192.168.141.132:8848
+spring.cloud.nacos.config.file-extension=yaml
+```
+
+#### 6.2.4 测试多环境配置
+
+此时我们有两个配置文件，分别为 `bootstrap.properties` 和 `bootstrap-prod.properties` ，我们需要指定启动时加载哪一个配置文件
+
+**Run** -> **Edit Configurations** -> **Active profiles:**
+
+![img](11-Alibaba-Nacos.assets/FkNrV5jqJWruOQRCzH6Wb02d9Ctx@.webp)
+
+运行项目并观察日志
+
+![img](11-Alibaba-Nacos.assets/FrQRWv5fQfLWHi9A9Z5ltlFhWdft@.webp)
+
+由上图可知，我们成功加载了不同环境的配置
+
+
+
+​	
+
