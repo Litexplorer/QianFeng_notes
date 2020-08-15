@@ -399,7 +399,6 @@ Feign 是一个声明式的伪 HTTP 客户端，它使得写 HTTP 客户端变�
 我们当前项目中创建一个接口，在接口中加入声明式调用即可：
 
 ```java
-
 /**
  * @Author: ChromeChen
  * @Description: 该接口用于 Feign 声明式调用
