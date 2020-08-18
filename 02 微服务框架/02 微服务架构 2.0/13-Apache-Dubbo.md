@@ -120,7 +120,7 @@ Zookeeper 是通过 TCP 的心跳判断服务是否可用，但 TCP 的活性并
 
 
 
-## 二、项目工程准备
+## 二、项目工程创建以及测试
 
 和上个例子一样，Dubbo 工程也是按照『父工程 + 依赖工程』来创建项目。
 
@@ -885,5 +885,113 @@ management:
 
 > maven 依赖关系的渐进式代码编写：确定好了结构以后，每次只添加一部分，然后点击 clean 命令等，观察是否能够正常编辑通过。
 
+## 三、分布式配置中心
 
+本次配置以服务消费者为例子。
+
+### 3.1 
+
+在 hello-apache-dubbo-consumer 项目中添加依赖：
+
+```xml
+<dependency>
+            <groupId>com.alibaba.cloud</groupId>
+            <artifactId>spring-cloud-starter-alibaba-nacos-config</artifactId>
+        </dependency>
+```
+
+> 除此以外，还需要在 hello-apache-dubbo-dependencies 项目中添加该依赖的版本管理：
+>
+> ```xml
+>             <dependency>
+>                 <groupId>com.alibaba.cloud</groupId>
+>                 <artifactId>spring-cloud-starter-alibaba-nacos-config</artifactId>
+>                 <version>2.2.1.RELEASE</version>
+>             </dependency>
+> 
+> ```
+>
+> 
+
+### 3.2 添加配置
+
+在 hello-apache-dubbo-consumer 项目中添加配置文件 bootstrap.properties
+
+```properties
+spring.application.name=dubbo-consumer-config
+spring.cloud.nacos.config.server-addr=10.4.62.239:8848
+spring.cloud.nacos.config.file-extension=yaml
+```
+
+并注释掉 application.yaml 文件中的内容。
+
+接下来，在 nacos 控制台中发布 dubbo-consumer-config.yaml 配置，配置内容如下：
+
+```yaml
+spring:
+  application:
+    name: dubbo-consumer
+  main:
+    allow-bean-definition-overriding: true
+
+dubbo:
+  scan:
+    base-packages: com.chen.apache.dubbo.consumer.web.controller
+  protocol:
+    name: dubbo
+    port: -1
+  registry:
+    address: nacos://10.4.62.239:8848
+
+server:
+  port: 8080
+
+endpoints:
+  dubbo:
+    enabled: true
+management:
+  health:
+    dubbo:
+      status:
+        defaults: memory
+        extras: threadpool
+  endpoints:
+    web:
+      exposure:
+        include: "*"
+
+user:
+  name: "描阳王"
+```
+
+### 3.3 读取配置信息，并动态刷新
+
+在 EchoController 中添加注解 `@RefreshScope`,然后添加以下代码：
+
+```java
+ @Value("${user.name}")
+    private String username;
+
+@GetMapping(value = "/refresh")
+    public String refresh() {
+        return echoService.echo("consumer message is : " + username);
+    }
+```
+
+启动项目，可以发现以下输出：
+
+
+
+并访问接口 /echo/refresh 输出以下信息：
+
+
+
+在 nacos 控制台中把配置项修改为：
+
+```yaml
+user: 
+  name: "kdfjdkljf"
+```
+
+再次访问 /echo/refresh ，输出以下信息：
 
