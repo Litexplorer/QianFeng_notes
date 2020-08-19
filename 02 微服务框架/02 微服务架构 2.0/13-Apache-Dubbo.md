@@ -891,7 +891,7 @@ management:
 
 ### 3.1 
 
-在 hello-apache-dubbo-consumer 项目中添加依赖：
+在 *hello-apache-dubbo-consumer* 项目中添加依赖：
 
 ```xml
 <dependency>
@@ -923,9 +923,9 @@ spring.cloud.nacos.config.server-addr=10.4.62.239:8848
 spring.cloud.nacos.config.file-extension=yaml
 ```
 
-并注释掉 application.yaml 文件中的内容。
+并注释掉 *application.yaml* 文件中的内容。
 
-接下来，在 nacos 控制台中发布 dubbo-consumer-config.yaml 配置，配置内容如下：
+接下来，在 nacos 控制台中发布 *dubbo-consumer-config.yaml* 配置，配置内容如下：
 
 ```yaml
 spring:
@@ -980,11 +980,11 @@ user:
 
 启动项目，可以发现以下输出：
 
-
+![image-20200819151530988](13-Apache-Dubbo.assets/image-20200819151530988.png)
 
 并访问接口 /echo/refresh 输出以下信息：
 
-
+![image-20200819151619697](13-Apache-Dubbo.assets/image-20200819151619697.png)
 
 在 nacos 控制台中把配置项修改为：
 
@@ -994,4 +994,6 @@ user:
 ```
 
 再次访问 /echo/refresh ，输出以下信息：
+
+![image-20200819151717981](13-Apache-Dubbo.assets/image-20200819151717981.png)
 
