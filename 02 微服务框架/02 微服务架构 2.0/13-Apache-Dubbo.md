@@ -1115,7 +1115,7 @@ public class Abc implements Serializable { }
 
 ### 5.3 配置负载均衡
 
-要使用 Dubbo 的负载均衡很简单，只需要修改『服务提供者』的项目的负载策略。默认的负载策略是随机，我们修改为轮询。可配置的值分别是：`random ``roundrobin ``leastactive ``consistenthash`
+要使用 Dubbo 的负载均衡很简单，只需要修改『服务提供者』的项目的负载策略。默认的负载策略是随机，我们修改为轮询。可配置的值分别是：`random`   `roundrobin`  `leastactive consistenthash`
 
 ```yaml
 spring:
@@ -1141,5 +1141,28 @@ dubbo:
 
 ② 这里使用了轮询策略。
 
+接着在 service 中注入` ${dubbo.protocol.port}`，然后返回到『服务消费者』，由『消费者』返回到前端即可。
+
+**注入并返回：**
+
+```java
+@Value("${dubbo.protocol.port}")
+private String port;
+
+@Override
+public String echo(String s) {
+    return "the port is :" + port;
+}
+```
 
 
+
+访问 /echo/hi 可以看到：
+
+![image-20200820220422948](13-Apache-Dubbo.assets/image-20200820220422948.png)
+
+不断刷新，可以发现端口不断变化：
+
+![image-20200820220444673](13-Apache-Dubbo.assets/image-20200820220444673.png)
+
+这就实现了“轮询”的负载均衡策略。
