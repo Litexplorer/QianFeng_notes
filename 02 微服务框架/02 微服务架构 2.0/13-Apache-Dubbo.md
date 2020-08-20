@@ -1079,9 +1079,67 @@ dubbo.protocol.serialization: kryo
 >
 > 另：通过原理（结构）的正常情况，然后逆推异常情况，可以构造测试用例。
 
+### 4.4 序列化类说明
 
+要想使用 Kryo 序列化，只需要传输对象实现序列化接口即可，无需额外再做配置。
 
+```java
+public class Abc implements Serializable { }
+```
 
+> 架构是演化而来的，不是设计而来的。
+
+## 五、Dubbo 的负载均衡
+
+### 5.1 概述
+
+在集群负载均衡时，Dubbo 提供了多种均衡策略，缺省值为 random （随机调用）。
+
+### 5.2 负载均衡策略
+
+#### 5.2.1 随机
+
+按权重设置随机概率，在一个截面上碰撞的概率高，但调用量越大分布越均匀，而且按概率使用权重后也比较均匀，有利于动态调整提供者权重。
+
+#### 5.2.2 轮询
+
+按公约后的权重设置轮询比率，存在慢的提供者累积请求的问题。
+
+#### 5.2.3 最少活跃调用数
+
+相同活跃数的随机，活跃数调用前后计数差，使慢的提供者收到更少的请求。
+
+#### 5.2.4 一致性 Hash
+
+相同参数的请求总是转发到统一提供者。当原本发往该提供者的请求，基于虚拟节点，平摊到其他提供者，不会引起剧烈变动。
+
+### 5.3 配置负载均衡
+
+要使用 Dubbo 的负载均衡很简单，只需要修改『服务提供者』的项目的负载策略。默认的负载策略是随机，我们修改为轮询。可配置的值分别是：`random ``roundrobin ``leastactive ``consistenthash`
+
+```yaml
+spring:
+  application:
+    name: dubbo-provider
+  main:
+    allow-bean-definition-overriding: true
+
+dubbo:
+  scan:
+    base-packages: com.chen.hello.apache.dubbo.provider.service
+  protocol:
+    name: dubbo
+    port: 20880	# ①
+    serialization: kryo
+  registry:
+    address: nacos://10.4.62.239:8848
+  provider:
+    loadbalance: roundrobin # 轮询策略
+```
+
+① 这里使用了 dubbo 默认的端口号，由于需要同时启动多个服务，所以我们可以指定端口号启动项目。
+
+② 这里使用了轮询策略。
 
 
 
