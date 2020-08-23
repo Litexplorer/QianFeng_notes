@@ -1166,3 +1166,18 @@ public String echo(String s) {
 ![image-20200820220444673](13-Apache-Dubbo.assets/image-20200820220444673.png)
 
 这就实现了“轮询”的负载均衡策略。
+
+
+
+## 六、Dubbo 的外部化配置
+
+### 6.1 概述
+
+由于我们已经使用了 Nacos Server 作为我们的注册中心，所以此处我们依然使用 Nacos Config 实现 Dubbo 的外部化配置
+
+### 6.2 操作步骤
+
+具体操作步骤请查看[11-Alibaba-Nacos.md](./11-Alibaba-Nacos.md)中的 《五、Alibaba Nacos 分布式配置中心》章节。此处不再赘述。
+
+
+
