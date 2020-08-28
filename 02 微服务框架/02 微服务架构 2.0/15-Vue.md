@@ -247,7 +247,7 @@ Vue 实例销毁后调用。调用后，Vue 实例指示的所有东西都会解
 
 
 
-### 4.1 多重条件判断 v-if
+### 4.2 多重条件判断 v-if
 
 ```html
 <!DOCTYPE html>
@@ -281,7 +281,7 @@ Vue 实例销毁后调用。调用后，Vue 实例指示的所有东西都会解
 
 
 
-### 4.1循环 v-for
+### 4.3 循环 v-for
 
 ```html
 <!DOCTYPE html>
@@ -315,17 +315,281 @@ Vue 实例销毁后调用。调用后，Vue 实例指示的所有东西都会解
 </html>
 ```
 
+### 4.4 点击事件 v-on
+
+```html
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>点击事件语法</title>
+</head>
+<body>
+    <div id="a0">
+        <!-- ① -->
+        <button v-on:click="sayHi();">点我</button>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/vue"></script>
+    <script>
+        var vm = new Vue({
+            el: "#a0",
+            data: {
+                message: "这里是 on 点击后的文本！"
+            }, 
+            // ② 这里声明方法列表
+            methods: {
+                // ③ 方法的声明语法：方法名:function 关键字
+                sayHi: function() {
+                    alert(this.message);
+                }
+            }
+        })
+    </script>
+</body>
+</html>
+```
+
+注意：
+
+1. 本次例子中的 button 控件，绑定了其中一个方法；注意语法！！
+
+用浏览器打开网页，然后点击按钮，发现没有反应。只有当开启了调试模式的时候才能看到效果：
+
+![image-20200828160510509](15-Vue.assets/image-20200828160510509.png)
+
+> 这是因为现在很多浏览器都已经屏蔽了 alert 方法。
+
+## 五、使用 Axios 实现异步通信
+
+### 5.1 什么是 Axios
+
+Axios 是一个开源的、可以在浏览器和 NodeJS 的异步通信框架，她的主要作用实现 AJAX 一步通信，其主要特点如下：
+
+1. 从浏览器中创建 `XMLHttpRequest`（ajax 通信）
+2. 从 `node.js` 创建 `http` 请求；
+3. 支持 `Promise API `（链式编程）；
+4. 拦截请求和响应；
+5. 转换请求数据和响应数据；
+6. 取消请求；
+7. 自动转换 JSON 数据；
+8. 客户端支持防御 `XSRF` （跨站请求伪造）；
+
+[Github 地址](https://github.com/axios/axios)
+
+### 5.2 为什么使用 Axios 
+
+由于 Vue.js 是一个**视图层框架**，并且作者严格遵守 `SoC`（关注度分离原则），所以 Vue.js 并不包含 AJAX 的通信功能。为了解决通信问题，作者单独开发了一个名为 `vue-resource` 的插件，不过进入 2.0 版本以后就停止了对该插件的维护并推荐了 Axios 框架。
+
+### 5.3 第一个 Axios 程序
+
+#### 5.3.1 准备工作
+
+我们首先创建一个 HTML，然后引入 Vue 框架：
+
+```html
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>第一个 Axios 应用程序</title>
+</head>
+<body>
+    <div id="d0">
+        <div>名称：{{info.name}}</div>
+        <div>链接：{{info.url}}</div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/vue"></script>
+    <script>
+        var vm = new Vue({
+            el: "#d0", 
+            // 函数对象，括号代表函数，大括号代表对象；注意：没有冒号
+            data() {
+                // 函数对象必须有 return 关键字
+                return {
+                    info : {
+                        name : 123, 
+                        url : null
+                    }
+                }
+            }
+
+        })
+    </script>
+</body>
+</html>
+```
+
+上面的 Vue 实例中的 `data` 变成了函数对象 `data(){}`。在函数对象中返回了一个『数据承载模型』。
+
+我们运行页面，页面正常显示：
+
+![image-20200828165651236](15-Vue.assets/image-20200828165651236.png)
+
+#### 5.3.2 引入 axios
+
+我们我们首先在 HTML 代码中加入以下“依赖”：
+
+```html
+<!-- ② 引入 axios 框架 -->
+<script src="https://unpkg.com/axios/dist/axios.min.js"></script>
+```
+
+然后把 Vue 对象改写成以下形式：
+
+```html
+<script>
+    var vm = new Vue({
+        el: "#d0", 
+        // 函数对象，括号代表函数，大括号代表对象；注意：没有冒号
+        data() {
+            // 函数对象必须有 return 关键字
+            return {
+                info : {
+                    name : 123, 
+                    url : null
+                }
+            }
+        },
+        // ② 添加钩子函数
+        mounted() {
+            // ③ 链式编程
+            axios.get("data.json").then(abc => this.info = abc.data);
+        }
+
+    })
+</script>
+```
+
+可以发现：Vue 对象中加入了『钩子函数 `mounted`』以及在该钩子函数中通过 axios 请求了当前文件夹下的` data.json` 文件中的数据，请求到数据以后，保存在变量 `abc` 中，然后再把 `abc `中的 `data` 属性赋值给了当前 Vue 实例的 `info `属性。
+
+此时，我们通过 VSCode 中的插件 Live Server 打开这个 HTML 文件
+
+![image-20200828204938035](15-Vue.assets/image-20200828204938035.png)
+
+可以发现以下输出：
+
+![image-20200828205006109](15-Vue.assets/image-20200828205006109.png)
+
+这说明：json 文件中的数据，已经绑定到了 div 中。
+
+#### 5.3.3 润色
+
+我们继续在原来得劲基础上添加新的属性：
+
+首先在 Vue 实例中继续定义新的属性：
+
+```html
+<script>
+    var vm = new Vue({
+        el: "#d0", 
+        // 函数对象，括号代表函数，大括号代表对象；注意：没有冒号
+        data() {
+            // 函数对象必须有 return 关键字
+            return {
+                info : {
+                    name : 123, 
+                    url : null,
+                    address: {
+                        country: null, 
+                        city: null, 
+                        street: null
+                    } 
+                }
+            }
+        },
+        // ② 添加钩子函数
+        mounted() {
+            // ③ 链式编程
+            axios.get("data.json").then(abc => this.info = abc.data);
+        }
+
+    })
+</script>
+```
+
+然后在 div 中添加新的元素：
+
+```html
+<div id="d0">
+    <div>名称：{{info.name}}</div>
+    <div>链接：<a v-bind:href="info.url" target="_blank">{{info.url}}</a></div>
+    <div>地址：{{info.address.country}}-{{info.address.city}}-{{info.address.street}}</div>
+</div>
+```
+
+1. 这里我们使用了 v-bind 标签替换了 HTML 中的 a 标签。
+
+此时再浏览器中可以看到：
+
+![image-20200828205722083](15-Vue.assets/image-20200828205722083.png)
+
+> 附：完整的 HTML 代码：
+>
+> ```html
+> <!DOCTYPE html>
+> <html lang="en">
+> <head>
+>     <meta charset="UTF-8">
+>     <meta name="viewport" content="width=device-width, initial-scale=1.0">
+>     <title>第一个 Axios 应用程序</title>
+> </head>
+> <body>
+>     <div id="d0">
+>         <div>名称：{{info.name}}</div>
+>         <div>链接：<a v-bind:href="info.url" target="_blank">{{info.url}}</a></div>
+>         <div>地址：{{info.address.country}}-{{info.address.city}}-{{info.address.street}}</div>
+>     </div>
+> 
+>     <script src="https://cdn.jsdelivr.net/npm/vue"></script>
+>     <!-- ② 引入 axios 框架 -->
+>     <script src="https://unpkg.com/axios/dist/axios.min.js"></script>
+>     <script>
+>         var vm = new Vue({
+>             el: "#d0", 
+>             // 函数对象，括号代表函数，大括号代表对象；注意：没有冒号
+>             data() {
+>                 // 函数对象必须有 return 关键字
+>                 return {
+>                     info : {
+>                         name : 123, 
+>                         url : null,
+>                         address: {
+>                             country: null, 
+>                             city: null, 
+>                             street: null
+>                         } 
+>                     }
+>                 }
+>             },
+>             // ② 添加钩子函数
+>             mounted() {
+>                 // ③ 链式编程
+>                 axios.get("data.json").then(abc => this.info = abc.data);
+>             }
+> 
+>         })
+>     </script>
+> </body>
+> </html>
+> ```
+>
+> 
+
+#### 5.3.4 总结
+
+上面的案例，可以发现：
+
+1. Vue 实例中的 data 变成了函数对象；
+2. 使用 axios 的时候需要启动一个服务器，axios 可以在这个服务器的基础上，读取本地文件。而『读取』这个操作，实质上就是模拟请求后台的操作；
+3. axios 可以进行自动装箱，将读取到的数据绑定到 data 函数对象中；绑定的方法是：通过『钩子函数 mounted』，这个函数是在 Vue实例初始化的时候被调用的；
 
 
 
-
-
-
-
-
-
-
-
+这个案例并没有按照文档中的教程一步一步地走，而是作了调整。调整的依据是：按照自己上一步所能掌握的知识，然后在这个基础上进行叠加。因此，以后学习可以按照这个方式来：先根据自己所掌握的，再在这个基础上一步一步添加新的知识，螺旋式上升。
 
 
 
