@@ -154,15 +154,166 @@ Vue 就是 MVVM 模式的实现者，而 MVVM 模式中最重要的就是 ViewMo
 
 从这个例子中也可以看出：Vue 实现了观察者模式，并将数据绑定到了 Model 中。
 
+## 三、Vue 的生命周期
+
+### 3.1 概述
+
+Vue 实例有一个完整的生命周期，也就是**从开始创建、初始化数据、编译模板、挂载 DOM、渲染→更新→渲染 、卸载** 等一系列过程，我们称之为 Vue 的生命周期。通俗来说就是 Vue 实例从创建到销毁的过程。
+
+在 Vue 的整个生命周期中，它提供了一系列的事件，可以让我们在事件触发时注册 JS 方法，可以让我们用自己注册的 JS 方法控制整个大局，在这些事件响应方法中的 `this` 直接指向的是 Vue 的实例。
+
+> 通过 AOP 思想来了解生命周期
+
+> 注意查看 web_hook 的介绍（02:55~06:47）
+>
+> A 系统中需要调用别的系统的接口，同时接收被调用者返回的数据。此时，A 系统在设计的时候就会设计一个『钩子函数』，按照用户的配置调用指定的接口，并接收返回的数据。在这个过程中，『钩子函数』的作用和『回调函数』相似，而 A 系统在这个过程中则可以看做是一个“网关”的作用。
+
+![](15-Vue.assets/6aedb651gy1fmncxvp4doj20xc2cfaim.jpg)
+
+### 3.2 钩子函数出发时机
+
+#### [#](https://funtl.com/zh/vue/附：Vue-实例的生命周期.html#beforecreate)beforeCreate
+
+在实例初始化之后，数据观测(data observer) 和 event/watcher 事件配置之前被调用。
+
+#### [#](https://funtl.com/zh/vue/附：Vue-实例的生命周期.html#created)created
+
+实例已经创建完成之后被调用。在这一步，实例已完成以下的配置：数据观测(data observer)，属性和方法的运算， watch/event 事件回调。然而，挂载阶段还没开始，$el 属性目前不可见。
+
+#### [#](https://funtl.com/zh/vue/附：Vue-实例的生命周期.html#beforemount)beforeMount
+
+在挂载开始之前被调用：相关的 render 函数首次被调用。
+
+#### [#](https://funtl.com/zh/vue/附：Vue-实例的生命周期.html#mounted)mounted
+
+el 被新创建的 vm.$el 替换，并挂载到实例上去之后调用该钩子。
+
+#### [#](https://funtl.com/zh/vue/附：Vue-实例的生命周期.html#beforeupdate)beforeUpdate
+
+数据更新时调用，发生在虚拟 DOM 重新渲染和打补丁之前。 你可以在这个钩子中进一步地更改状态，这不会触发附加的重渲染过程。
+
+#### [#](https://funtl.com/zh/vue/附：Vue-实例的生命周期.html#updated)updated
+
+由于数据更改导致的虚拟 DOM 重新渲染和打补丁，在这之后会调用该钩子。
+
+当这个钩子被调用时，组件 DOM 已经更新，所以你现在可以执行依赖于 DOM 的操作。然而在大多数情况下，你应该避免在此期间更改状态，因为这可能会导致更新无限循环。该钩子在服务器端渲染期间不被调用。
+
+#### [#](https://funtl.com/zh/vue/附：Vue-实例的生命周期.html#beforedestroy)beforeDestroy
+
+实例销毁之前调用。在这一步，实例仍然完全可用。
+
+#### [#](https://funtl.com/zh/vue/附：Vue-实例的生命周期.html#destroyed)destroyed
+
+Vue 实例销毁后调用。调用后，Vue 实例指示的所有东西都会解绑定，所有的事件监听器会被移除，所有的子实例也会被销毁。该钩子在服务器端渲染期间不被调用。
+
+## 四、Vue 基本语法
+
+这里介绍三个基本语法：
+
+简单条件判断、多重条件判断、循环。
+
+### 4.1 简单条件判断 v-if
+
+例子：
+
+```html
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>v-if 条件</title>
+    <script src="https://cdn.jsdelivr.net/npm/vue@2.5.21/dist/vue.js"></script>
+
+</head>
+<body>
+    <div id="a0">
+        <!-- v-if 里面填写的是判断内容，一般填写变量名 -->
+        <h2 v-if="isOk">现在是 OK</h2>
+        <h1 v-else>现在是 NO</h1>
+    </div>
+
+    <script type="text/javascript">
+        var vm = new Vue({
+            el: "#a0", 
+            data: {
+                isOk : true
+            }
+        })
+    </script>
+</body>
+</html>
+```
 
 
 
+### 4.1 多重条件判断 v-if
+
+```html
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>v-if-else-if 练习</title>
+</head>
+<body>
+    <div id="a0">
+        <h1 v-if="type === 'A'">这是 A</h1>
+        <h1 v-else-if="type === 'B'">这是 B</h1>
+        <h1 v-else>其他</h1>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/vue"></script>
+    <script type="text/javascript">
+        var vm = new Vue({
+            el: "#a0", 
+            data: {
+                // 注意这里不能写成 type = "A" _(:з」∠)_
+                // 其实就是 json 的语法啦
+                type: "A"
+            }
+        })
+    </script>
+</body>
+</html>
+```
 
 
 
+### 4.1循环 v-for
 
+```html
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>v-for 语法</title>
+</head>
+<body>
+    <div id="a0">
+        <ul>
+            <li v-for="item in items">{{item.message}}</li>
+        </ul>
+    </div>
 
-
+    <script src="https://cdn.jsdelivr.net/npm/vue"></script>
+    <script>
+        var vm = new Vue({
+            el: "#a0", 
+            data: {
+                items:[
+                    {message: "陈奕迅"},
+                    {message: "梁静茹"},
+                    {message: "邓紫棋"},
+                ]
+            }
+        })
+    </script>
+</body>
+</html>
+```
 
 
 
