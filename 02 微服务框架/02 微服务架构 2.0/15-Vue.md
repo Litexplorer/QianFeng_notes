@@ -591,9 +591,174 @@ Axios 是一个开源的、可以在浏览器和 NodeJS 的异步通信框架，
 
 这个案例并没有按照文档中的教程一步一步地走，而是作了调整。调整的依据是：按照自己上一步所能掌握的知识，然后在这个基础上进行叠加。因此，以后学习可以按照这个方式来：先根据自己所掌握的，再在这个基础上一步一步添加新的知识，螺旋式上升。
 
+## 六、Vue 的表单输入
+
+### 6.1 什么是双向数据绑定
+
+Vue.js 是一个 MVVM 框架，即数据双向绑定，即当数据发生变化的时候，视图也就发生变化；当视图发生变化的时候，数据也会发生变化。值得注意的是：我们所说的数据双向绑定，一定是对于 UI 控件来说的，非 UI 控件不会涉及到数据双向绑定。单向数据绑定是使用状态管理工具的前提。如果我们使用 `vuex`，那么数据流也是单项的，这是就会和双向数据绑定有冲突。
+
+### 6.2 为什么要实现数据的双向绑定
+
+在 Vue.js 中，如果使用 vuex，实际上数据还是导向的，之所以说是数据双向绑定，这是用的 UI 控件来说，对于我们处理表单，Vue.js 的双向数据绑定用起来就特别舒服了。即两者并不互斥，在全局性数据流使用单向，方便跟踪；局部性数据流使用双向，简单易操作。
+
+### 6.3 在表单中使用双向数据绑定
+
+你可以用 `v-model` 指令在表单 `<input>`、`<textarea>` 及 `<select>` 元素上创建双向数据绑定。它会根据控件类型自动选取正确的方法来更新元素。尽管有些神奇，但 `v-model` 本质上不过是语法糖。它负责监听用户的输入事件以更新数据，并对一些极端场景进行一些特殊处理。
+
+**注意：`v-model` 会忽略所有表单元素的 `value`、`checked`、`selected` 特性的初始值而总是将 Vue 实例的数据作为数据来源。你应该通过 JavaScript 在组件的 `data` 选项中声明初始值。**
+
+### 6.4 示例代码
+
+在 Vue 基础上，对 div 进行以下改造：
+
+```html
+<div id="d0">
+    单行文本：<input type="text" v-model="message"/> &nbsp;&nbsp; 单行文本是：{{message}}
+</div>
+```
+
+可以发现：上面的 input 文本框使用了 v-model 标签，而这个标签中填写的是 Vue 实例中的 data 中的变量。
+
+打开网页，我们可以观察到以下的信息：
+
+![image-20200828212943513](15-Vue.assets/image-20200828212943513.png)
+
+不断改变文本框中的值，文本的值也发生同步的变化，在控制台中的 `vm.message` 的值也同步。
+
+## 七、Vue 组件
+
+### 7.1 什么是组件
+
+组件是可复用的 Vue 实例，说白了就是一组可以重复使用的模板，跟 `JSTL` 的自定义标签、`Thymeleaf`的 `th:fragment` 以及 `Sitemesh3` 框架有着异曲同工之妙。通常一个应用会以一棵嵌套的组件树的形式来组织：
+
+![img](15-Vue.assets/Lusifer201812220001.png)
+
+例如，你可能会有页头、侧边栏、内容区等组件，每个组件又包含了其它的像导航链接、博文之类的组件。
+
+### 7.2 第一个 vue 组件
+
+> **注意：在实际开发中，我们并不会用以下方式开发组件，而是采用 `vue-cli` 创建 `.vue` 模板文件的方式开发**。
+
+#### 7.2.1 封装组件
+
+代码如下：
+
+```html
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>自定义组件</title>
+</head>
+<body>
+    <div id="d0">
+        <ul>
+            <my-li></my-li>
+        </ul>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/vue@2.5.21/dist/vue.js"></script>
+    <script>
+        // 这里封装了一个组件，可以通过 my-li 来使用它
+        Vue.component("my-li", {
+            template: "<li >这是自定义的组件</li>"
+        })
 
 
+        var vm = new Vue({
+            // 必须指定需要绑定的 div
+            el : "#d0"
+        })
+    </script>
+</body>
+</html>
+```
 
+#### **7.2.2 使用 `props `属性传递参数**
+
+像上面那样用组件没有任何意义，所以我们是需要传递参数到组件的，此时就需要使用 `props` 属性了
+
+> **注意：默认规则下 `props` 属性里的值不能为大写；**
+
+首先需要定义数据模型：
+
+```javascript
+ var vm = new Vue({
+     // 必须指定需要绑定的 div
+     el : "#d0", 
+     data: {
+         items:["Windows", "Mac", "Linux", "Unix"]
+     }
+ })
+```
+
+接着在组件中定义变量：
+
+```javascript
+// 这里封装了一个组件，可以通过 my-li 来使用它
+Vue.component("my-li", {
+    // ② 这里是定义『变量』，{{}}则是使用变量
+    props: ["item_com"],
+    template: "<li style='color : grey;'>这是自定义的组件，值为：{{item_com}}</li>"
+})
+
+```
+
+最后在页面元素中绑定：
+
+```html
+<div id="d0">
+    <ul>
+        <!-- ② 这里在 for 的基础上增加了『组件绑定』，实质上就是一个映射关系：“组件的变量名称”=“父组件的变量名称” -->
+        <my-li v-for="item in items" v-bind:item_com="item"></my-li>
+    </ul>
+</div>
+```
+
+② 这里在 for 的基础上增加了『组件绑定』，实质上就是一个映射关系：“组件的变量名称”=“父组件的变量名称”
+
+> 完整的 HTML 如下所示：
+>
+> ```html
+> <!DOCTYPE html>
+> <html lang="en">
+> <head>
+>     <meta charset="UTF-8">
+>     <meta name="viewport" content="width=device-width, initial-scale=1.0">
+>     <title>自定义组件</title>
+> </head>
+> <body>
+>     <div id="d0">
+>         <ul>
+>             <!-- ② 这里在 for 的基础上增加了『组件绑定』，实质上就是一个映射关系：“组件的变量名称”=“父组件的变量名称” -->
+>             <my-li v-for="item in items" v-bind:item_com="item"></my-li>
+>         </ul>
+>     </div>
+> 
+>     <script src="https://cdn.jsdelivr.net/npm/vue@2.5.21/dist/vue.js"></script>
+>     <script>
+>         // 这里封装了一个组件，可以通过 my-li 来使用它
+>         Vue.component("my-li", {
+>             // ② 这里是定义『变量』，{{}}则是使用变量
+>             props: ["item_com"],
+>             template: "<li style='color : grey;'>这是自定义的组件，值为：{{item_com}}</li>"
+>         })
+> 
+> 
+>         var vm = new Vue({
+>             // 必须指定需要绑定的 div
+>             el : "#d0", 
+>             data: {
+>                 items:["Windows", "Mac", "Linux", "Unix"]
+>             }
+>         })
+>     </script>
+> </body>
+> </html>
+> ```
+>
+> 
 
 
 
