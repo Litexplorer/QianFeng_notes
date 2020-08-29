@@ -760,5 +760,78 @@ Vue.component("my-li", {
 >
 > 
 
+## 八、Vue 计算属性
 
+### 8.1 什么是计算属性
+
+计算属性，重点突出在`属性`两个字上（**属性是名词**），首先它是一个`属性`，其次，这个属性有`计算`的能力（**计算是动词**）。这里的计算就是一个函数；
+
+简单来说，『计算属性』就是一个能够将计算结果缓存起来的属性呀（将行为转化成了静态的属性）。
+
+### 8.2 计算属性与方法的区别
+
+代码如下：
+
+```html
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>计算属性-demo</title>
+</head>
+<body>
+    <div id="d0">
+        <p>当前获取时间的方法：{{getCurrentTime01()}}</p>
+        <!-- 注意：调用『计算属性』的时候，不能带括号，因为其就是一个『属性』 -->
+        <p>当前获取时间的属性：{{getCurrentTime02}}</p>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/vue"></script>
+    <script>
+        var vm = new Vue({
+            el: "#d0", 
+
+            // 这里就是使用 CPU 进行计算
+            methods: {
+                getCurrentTime01 : function() {
+                    return Date.now();
+                }
+            }, 
+            // 这里使用 CPU 计算以后，将结果保存到缓存中
+            computed: {
+                getCurrentTime02: function() {
+                    return Date.now();
+                }
+            }
+        })
+    </script>
+</body>
+</html>
+```
+
+说明
+
+- `methods`：定义方法，调用方法使用 `currentTime1()`，需要带括号
+- `computed`：定义计算属性，调用属性使用 `currentTime2`，不需要带括号；`this.message` 是为了能够让 `currentTime2` 观察到数据变化而变化
+
+**注意：`methods` 和 `computed` 里不能重名。**
+
+
+
+效果如下：
+
+![image-20200829215545271](15-Vue.assets/image-20200829215545271.png)
+
+### 8.3 结论
+
+调用方法的时候，每次都需要进行计算，而计算必定产生系统开销。如果这个计算结果是不经常变化的话，此时就可以考虑将这个结果缓存起来，以减少系统开销。采用『计算属性』可以很方便做到这一点：计算属性的主要特性就是为了将不经常变化的计算结果进行缓存，以节约我们的系统开销。
+
+## 九、Vue 的内容分发与自定义事件
+
+### 9.1 什么是内容分发
+
+我们通过前面的学习可以知道：Vue 框架可以实现自定义组件，但是着个组件存在一个问题：里面的标签元素必须是确定的（而内容可以不固定）。这时遇到一个场景：组件中的元素需要根据不同的业务产生变化，那该如何实现呢？我们可以使用 Vue 中的内容分发 slot ，来实现这个功能。
+
+（补充例子）
 
