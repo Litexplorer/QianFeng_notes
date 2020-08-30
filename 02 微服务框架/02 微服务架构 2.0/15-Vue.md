@@ -1032,6 +1032,73 @@ Vue.component('todo-items01', {
 
 ![image-20200830131607168](15-Vue.assets/image-20200830131607168.png)
 
+> 完整的 HTML 代码如下：
+>
+> ```html
+> <!DOCTYPE html>
+> <html lang="en">
+> <head>
+>     <meta charset="UTF-8">
+>     <meta name="viewport" content="width=device-width, initial-scale=1.0">
+>     <title>插槽例子</title>
+> </head>
+> <body>
+> 
+>     <div id="d0">
+>         <todo >
+>             <todo-title01 slot="todo-title" title="今日动漫推荐"></todo-title01>
+>             <todo-items01 slot="todo-items" v-on:remove="deleteItem(index)" v-for="(a, index) in arrays" v-bind:index="index" v-bind:item="a"></todo-items01>
+>         </todo>
+>     </div>
+> 
+>     <script src="https://cdn.jsdelivr.net/npm/vue"></script>
+>     <script>
+>         Vue.component('todo', {
+>             props: ['arrays'], 
+>             template: '<div>\
+>                             <slot name="todo-title"></slot>\
+>                             <ul><slot name="todo-items"></slot></ul>\
+>                         </div>'
+>         })
+> 
+>         // 定义一个新的组件，用于替换插槽
+>         Vue.component("todo-title01", {
+>             props: ['title'], 
+>             template: '<div>{{title}}</div>'
+>         })
+> 
+>         // 继续定义一个新的组件，
+>         Vue.component('todo-items01', {
+>             props: ['item', 'index'],
+>             // 注意：下面的 button 控件必须写在 li 控件中，而且点击函数必须使用 vue 中的点击方式
+>             template: '<li>第 {{index + 1}} 个动漫：{{item}}  <button @click="remove">删除</button></li> ', 
+>             methods: {
+>                 remove: function(index) {
+>                     // 这里的 remove 是自定义事件的名称，需要在 HTML 中使用 v-on:remove 的方式指派
+>                     this.$emit('remove', index);
+>                 }
+>             }
+>         })
+>         
+>         var vm = new Vue({
+>             el: '#d0', 
+>             data: {
+>                 arrays: ['犬夜叉', '火影忍者' ,'关于我转生成为史莱姆这件事' ,'辉夜大小姐向我告白']
+>             }, 
+>             methods: {
+>                 deleteItem: function(index) {
+>                     // splice() 方法向/从数组中添加/删除项目，然后返回被删除的项目，其中 index 为添加/删除项目的位置，1 表示删除的数量
+>                     this.arrays.splice(index, 1);
+>                 }
+>             }
+>         })
+>     </script>
+> </body>
+> </html>
+> ```
+>
+> 
+
 ### 9.5 总结
 
 1. 插槽的用法：
