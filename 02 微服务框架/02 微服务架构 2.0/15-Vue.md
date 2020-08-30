@@ -835,3 +835,216 @@ Vue.component("my-li", {
 
 （补充例子）
 
+### 9.2 插槽例子
+
+#### 9.2.1 例子的基础
+
+首先，我们需要创建一个自定义组件，并使用它：
+
+```html
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>插槽例子</title>
+</head>
+<body>
+
+    <div id="d0">
+        <todo v-bind:arrays="arrays"></todo>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/vue"></script>
+    <script>
+        Vue.component('todo', {
+            props: ['arrays'], 
+            template: '<div>{{arrays}}</div>'
+        })
+        
+        var vm = new Vue({
+            el: '#d0', 
+            data: {
+                arrays: ['犬夜叉', '火影忍者' ,'关于我转生成为史莱姆这件事' ,'辉夜大小姐向我告白']
+            }
+        })
+    </script>
+</body>
+</html>
+```
+
+从上面的代码中我们可以看到：定义了一个名为 `todo `的自定义组件；并在使用这个组件的时候传入了一个 `arrays` 的参数。
+
+界面显示的效果如下：
+
+![image-20200830122157813](15-Vue.assets/image-20200830122157813.png)
+
+#### 9.2.2 填充插槽
+
+把 `todo `组件中的 `template `改写成为插槽，并继续定义一个新的组件：
+
+- 将 `todo` 的 `template `改写成为：
+
+  ```html
+  Vue.component('todo', {
+              props: ['arrays'], 
+              template: '<div>\
+                              <slot name="todo-title"></slot>\
+                              <ul><slot name="todo-items"></slot></ul>\
+                          </div>'
+          })
+  
+  ```
+
+- 定义一个新的组件` todo-title01`：
+
+  ```html
+  // 定义一个新的组件，用于替换插槽
+          Vue.component("todo-title01", {
+              props: ['title'], 
+              template: '<div>{{title}}</div>'
+          })
+  ```
+
+- 在 `todo `标签中引入插槽：
+
+  ```html
+  <div id="d0">
+      <todo >
+          <todo-title01 slot="todo-title" title="今日动漫推荐"></todo-title01>
+      </todo>
+  </div>
+  ```
+
+我们可以通过第三个步骤发现：如果需要替换插槽，首先需要在父组件中定义子组件，然后在子组件中通过 `slot `属性来指定父组件的插槽的名称。
+
+此时，界面显示如下：
+
+![image-20200830123336886](15-Vue.assets/image-20200830123336886.png)
+
+#### 9.2.3 继续补充插槽
+
+经过上面的步骤以后，我们已经可以向组件中添加插槽，并进行插槽绑定。我们继续添加一个新的插槽，用于显示列表：
+
+- 添加组件：
+
+  ```html
+  // 继续定义一个新的组件，
+          Vue.component('todo-items01', {
+              props: ['item', 'index'],
+              template: '<li>第 {{index + 1}} 个动漫：{{item}}</li>'
+          })
+  ```
+
+- 替换插槽：
+
+  ```html
+  <div id="d0">
+      <todo >
+          <todo-title01 slot="todo-title" title="今日动漫推荐"></todo-title01>
+          <todo-items01 slot="todo-items" v-for="(a, index) in arrays" v-bind:index="index" v-bind:item="a"></todo-items01>
+      </todo>
+  </div>
+  ```
+
+  上面的` v-for `语法获取了 `index `下表索引；将两个参数传递到子组件的时候，需要绑定两次。
+
+此时，界面效果如下：
+
+![image-20200830124406376](15-Vue.assets/image-20200830124406376.png)
+
+### 9.4 实现自定义事件
+
+通过上面的代码不难发现：数据项在 Vue 的实例中，但是删除操作要在组件中完成。那么组件如何才能删除 Vue 实例中的数据呢？此时就涉及到参数传递与事件分发了。Vue 为我们提供了『自定义事件』的功能，很好地解决了这个问题。使用方式为：`this.$emit(自定义事件名称， 参数)`。
+
+下面，我们就继续上述的例子来实现『自定义事件』。
+
+#### 9.4.1 定义子组件的函数
+
+将` todo-items` 组件改写成以下代码：
+
+```html
+Vue.component('todo-items01', {
+            props: ['item', 'index'],
+            // 注意：下面的 button 控件必须写在 li 控件中，而且点击函数必须使用 vue 中的点击方式
+            template: '<li>第 {{index + 1}} 个动漫：{{item}}  <button @click="remove">删除</button></li> ', 
+            methods: {
+                remove: function() {
+                    console.log('进入了删除方法')
+                }
+            }
+        })
+```
+
+此时，刷新页面，可以看到页面出现了按钮；点击按钮，我们可以在控制台中看到输出：
+
+![image-20200830130056843](15-Vue.assets/image-20200830130056843.png)
+
+#### 9.4.2 定义父组件函数，并进行父子函数的绑定
+
+- 改写 vue 实例中的代码：添加函数：
+
+```javascript
+var vm = new Vue({
+            el: '#d0', 
+            data: {
+                arrays: ['犬夜叉', '火影忍者' ,'关于我转生成为史莱姆这件事' ,'辉夜大小姐向我告白']
+            }, 
+            methods: {
+                deleteItem: function(index) {
+                    // splice() 方法向/从数组中添加/删除项目，然后返回被删除的项目，其中 index 为添加/删除项目的位置，1 表示删除的数量
+                    this.arrays.splice(index, 1);
+                }
+            }
+        })
+```
+
+然后改写子组件中的函数的：
+
+```javascript
+Vue.component('todo-items01', {
+            props: ['item', 'index'],
+            // 注意：下面的 button 控件必须写在 li 控件中，而且点击函数必须使用 vue 中的点击方式
+            template: '<li>第 {{index + 1}} 个动漫：{{item}}  <button @click="remove">删除</button></li> ', 
+            methods: {
+                remove: function(index) {
+                    // 这里的 remove 是自定义事件的名称，需要在 HTML 中使用 v-on:remove 的方式指派
+                    this.$emit('remove', index);
+                }
+            }
+        })
+```
+
+最后修改绑定关系：添加函数绑定：
+
+```html
+<div id="d0">
+        <todo >
+            <todo-title01 slot="todo-title" title="今日动漫推荐"></todo-title01>
+            <todo-items01 slot="todo-items" v-on:remove="deleteItem(index)" v-for="(a, index) in arrays" v-bind:index="index" v-bind:item="a"></todo-items01>
+        </todo>
+    </div>
+```
+
+可以发现：上面的` v-on` 绑定了函数 `remove`，此时会调用父组件中的方法 `deleteItem`。
+
+此时，刷新页面，然后点击『删除』按钮，就会发现删除了当前的数据：
+
+![image-20200830131607168](15-Vue.assets/image-20200830131607168.png)
+
+### 9.5 总结
+
+1. 插槽的用法：
+   - 首先声明在哪里定义插槽
+   - 然后定义子组件；
+   - 最后在父组件中替换插槽；
+2. 自定义函数的用法：
+   - 首先定义子组件中的函数，并确认可以通过按钮进入该函数；
+   - 声明子组件的函数是『自定义函数』；
+   - 在父组件中定义函数，对数据进行操作；
+   - 在『替换插槽』的代码中进行父子函数的绑定；
+
+
+
+数据传递方向是：从子组件传递到父组件
+
