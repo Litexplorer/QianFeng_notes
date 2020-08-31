@@ -1115,3 +1115,131 @@ Vue.component('todo-items01', {
 
 数据传递方向是：从子组件传递到父组件
 
+## 十、Vue-cli
+
+
+
+### 10.1 什么是 vue-cli
+
+vue-cli 是 Vue 官方提供的一个脚手架（预先定义好的目录结构以及基础代码，类似于maven 中的 webapp 骨架），用于快速生成一个 vue 的项目模板。
+
+- 统一的目录结构
+- 本地调试；
+- 热部署；
+- 单元测试；
+- 集成打包上线；
+
+### 10.2 安装
+
+#### 10.2.1 安装 node.js
+
+去到 node 官网下载，然后安装即可
+
+![img](15-Vue.assets/Lusifer_20181224052651.png)
+
+安装成功以后，打开命令行界面
+
+```bash
+node -v
+# 会出现以下输出：
+v12.16.2
+```
+
+一般来说，安装 node 的同时会安装 npm：
+
+```bash
+λ npm -v
+6.14.4
+```
+
+安装淘宝镜像（类似于 maven 的仓库地址）
+
+```bash
+λ npm install --registry=https://registry.npm.taobao.org
+npm WARN saveError ENOENT: no such file or directory, open 'C:\Users\kfchen\package.json'
+npm notice created a lockfile as package-lock.json. You should commit this file.
+npm WARN enoent ENOENT: no such file or directory, open 'C:\Users\kfchen\package.json'
+npm WARN kfchen No description
+npm WARN kfchen No repository field.
+npm WARN kfchen No README data
+npm WARN kfchen No license field.
+```
+
+
+
+#### 10.2.2 安装 vue-cli
+
+输入命令：
+
+```bash
+λ cnpm install vue-cli -g
+Downloading vue-cli to C:\Users\kfchen\AppData\Roaming\npm\node_modules\vue-cli_tmp
+Copying C:\Users\kfchen\AppData\Roaming\npm\node_modules\vue-cli_tmp\_vue-cli@2.9.6@vue-cli to C:\Users\kfchen\AppData\Roaming\npm\node_modules\vue-cli
+Installing vue-cli's dependencies to C:\Users\kfchen\AppData\Roaming\npm\node_modules\vue-cli/node_modules
+[1/20] minimatch@^3.0.0 installed at node_modules\_minimatch@3.0.4@minimatch
+[2/20] commander@^2.9.0 installed at node_modules\_commander@2.20.3@commander
+[3/20] consolidate@^0.14.0 installed at node_modules\_consolidate@0.14.5@consolidate
+...
+```
+
+测试是否安装成功：
+
+```bash
+λ vue list
+
+  Available official templates:
+
+  ★  browserify - A full-featured Browserify + vueify setup with hot-reload, linting & unit testing.
+  ★  browserify-simple - A simple Browserify + vueify setup for quick prototyping.
+  ★  pwa - PWA template for vue-cli based on the webpack template
+  ★  simple - The simplest possible Vue setup in a single HTML file
+  ★  webpack - A full-featured Webpack + vue-loader setup with hot reload, linting, testing & css extraction.
+  ★  webpack-simple - A simple Webpack + vue-loader setup for quick prototyping.
+
+```
+
+#### 10.2.3 创建第一个 vue-cli 应用程序
+
+我们使用 webpack 模板来创建 vue 应用程序
+
+```bash
+# 这里使用了 vue init 命令，基于 webpack 模板创建应用程序，最后的 vue01 是项目名称，
+λ vue init webpack vue01
+```
+
+- `Project name`：项目名称，默认 `回车` 即可
+- `Project description`：项目描述，默认 `回车` 即可
+- `Author`：项目作者，默认 `回车` 即可
+- `Install vue-router`：是否安装 `vue-router`，选择 `n` 不安装（后期需要再手动添加）
+- `Use ESLint to lint your code`：是否使用 `ESLint` 做代码检查，选择 `n` 不安装（后期需要再手动添加）
+- `Set up unit tests`：单元测试相关，选择 `n` 不安装（后期需要再手动添加）
+- `Setup e2e tests with Nightwatch`：单元测试相关，选择 `n` 不安装（后期需要再手动添加）
+- `Should we run npm install for you after the project has been created`：创建完成后直接初始化，选择 `n`，我们手动执行
+
+接着安装依赖：
+
+```bash
+cnpm install 
+```
+
+最后启动项目：
+
+```bash
+λ npm run dev
+
+> vue01@1.0.0 dev E:\ProgramFiles\JetBrains\Idea_workplace\千锋教育\01 前锋教育——李卫民\02 Java全栈\03
+Java微服务框架\07-Vue\02 vue-cli\vue01
+> webpack-dev-server --inline --progress --config build/webpack.dev.conf.js
+
+         12% building modules 24/29 modules 5 active ...架\07-Vue\02 vue-cli\vue01\src\App.vue{ parser: " babylon" } is deprec   95% emitting
+
+ DONE  Compiled successfully in 5142ms                                                           14:59:31
+
+ I  Your application is running here: http://localhost:8080
+```
+
+打开浏览器，输入地址 http://localhost:8080 即可访问到以下界面：
+
+![image-20200831153115728](15-Vue.assets/image-20200831153115728.png)
+
+多看看（09:47 ~ 最后）的视频，介绍了骨架的配置文件以及对应的用途。
