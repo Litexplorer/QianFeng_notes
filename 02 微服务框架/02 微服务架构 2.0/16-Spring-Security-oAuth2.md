@@ -57,3 +57,94 @@ oAuth 在 "客户端" 与 "服务提供商" 之间，设置了一个授权层（
 >
 > 本质上，oAuth2 协议就是将原来“在资源服务器”上做的认证与授权，分离出来一个『认证服务器』专门来实现。然后『认证服务器』会返回一个“令牌”，从而让『资源服务器』确认身份。
 
+## 三、Spring Security哦Auth2 令牌的访问与刷新
+
+### 3.1 Access Token
+
+Access Token 是客户端访问资源服务器的令牌，拥有**这个令牌代表着得到用户的授权**。然而，这个授权应该是**临时性**的，有一定效期。这是因为，Access Token 在使用的过程中可能会泄露，给 Access Token 限定一个较短的有效期可以降低因 Access Token 泄露而带来的风险。
+
+然而引入了有效期以后，客户地段试用期起来就不那么方便了。每当 Access Token 过期，客户端就必须重新向用户索要授权，这样用户可能每隔几天，甚至每天都要进行授权操作。这是一件非常影响用户体验的事情。那么有没有什么办法可以避免这种情况呢？
+
+于是，oAuth 2.0 引入了 Refresh Token 机制。
+
+### 3.2 Refresh Token
+
+Refresh Token 的作用是用来刷新 Access Token：认证服务器提供一个刷新接口，例如：
+
+```
+http://www.funtl.com/refresh?refresh_token=&client_id=
+```
+
+
+
+传入 `refresh_token `和 `client_id `，认证服务器验证通过以后，返回一个 Access Token。为了安全，oAuth 2.0 引入了两个措施：
+
+1. oAuth 2.0 要求：Refresh Token 一定是保存在客户端的服务器上，而决不能放在狭义的客户端（例如 App、PC 端软件）上。调用 `refresh `接口的时候，一定是从服务器到服务器的访问。
+2. oAuth 2.0 引入了 `client_secret `机制：即每一个 `client_id `都对应一个 `client_secret`。这个 `client_secret `会在客户端申请 `client_id  `时，随 `client_id  `一起分配给客户端。客户端必须把 `client_secret `妥善保管在服务器上，决不能泄露，刷新 Access Token 时，需要验证这个 `client_secret`。
+
+实际上的刷新接口类似于：
+
+```text
+http://www.funtl.com/refresh?refresh_token=&client_id=&client_secret=
+```
+
+以上就是 Refresh Token 机制。Refresh Token 的有效期非常长，会在用户授权时，随 Access Token 一起重定向到回调 URL，传递给客户端。
+
+## 四、Spring Security oAuth2 客户端授权模式
+
+### 4.1 概述
+
+客户端必须得到用户的授权，才能获得令牌。oAuth 2.0 定义了四种授权方式：
+
+1. implicit：简化模式，不推荐使用
+2. authorization code：授权码模式
+3. resource owner password credentials：密码模式
+4. client credentials：客户端模式；
+
+> 多看看 08:35 视频
+
+### 4.2 简化模式
+
+简化模式适用于**纯静态页面应用**。所谓纯静态页面应用，也就是应用没有在服务器上执行代码的权限（通常是把代码托管在别人的服务器上），只有前端 JS 代码的控制权。
+
+这种场景下，应用是**没有持久化存储的能力**的。因此，按照 oAuth2.0 的规定，这种应用是拿不到 Refresh Token 的。其整个授权流程如下：
+
+![img](16-Spring-Security-oAuth2.assets/Lusifer_201904010002.png)
+
+> 该模式下，`access_token `容易泄露，而且不可刷新
+
+### 4.3 授权码模式
+
+授权码模式适用于有自己的服务器的应用，它是一个一次性的临时凭证，用来换取 `access_token` 和 `refresh_token`。认证服务器提供了一个类似这样的接口：
+
+```text
+https://www.funtl.com/exchange?code=&client_id=&client_secret=
+```
+
+需要传入 `code`、`client_id` 以及 `client_secret`。验证通过后，返回 `access_token` 和 `refresh_token`。一旦换取成功，`code` 立即作废，不能再使用第二次。流程图如下：
+
+![img](16-Spring-Security-oAuth2.assets/Lusifer_201904010003.png)
+
+这个 code 的作用是保护 token 的安全性。上一节说到，简单模式下，token 是不安全的。这是因为在第 4 步当中直接把 token 返回给应用。而这一步容易被拦截、窃听。引入了 code 之后，即使攻击者能够窃取到 code，但是由于他无法获得应用保存在服务器的 `client_secret`，因此也无法通过 code 换取 token。而第 5 步，为什么不容易被拦截、窃听呢？这是因为，首先，这是一个从服务器到服务器的访问，黑客比较难捕捉到；其次，这个请求通常要求是 https 的实现。即使能窃听到数据包也无法解析出内容。
+
+有了这个 code，token 的安全性大大提高。因此，oAuth2.0 鼓励使用这种方式进行授权，而简单模式则是在不得已情况下才会使用。
+
+> 一般来说，『授权码模式』应用场景是在：① 两家公司的业务需要对接； ② 同一家公司的不同产品线需要对接的时候；
+
+### 4.4 密码模式
+
+密码模式中，用户向客户端提供自己的用户名和密码。客户端使用这些信息，向『服务提供商』索要授权。这种模式和传统的（用户名/密码）模式类似。在这种模式中，用户必须把自己的密码给客户端，但是客户端不得存储密码。这通常用在用户对客户端高度新人的情况下，比如：客户端是操作系统的一部分。
+
+一个典型的例子就是同一个企业内部的不同产品要使用本企业的 oAuth2.0 体系。在有些情况下，产品希望能够定制化授权页面。由于是同个企业，不需要向用户展示“xxx将获取以下权限”等字样并询问用户的授权意向，而只需进行用户的身份认证即可。这个时候，由具体的产品团队开发定制化的授权界面，接收用户输入账号密码，并直接传递给鉴权服务器进行授权即可。
+
+![img](16-Spring-Security-oAuth2.assets/Lusifer_2019040104250001.png)
+
+有一点需要特别注意的是，在第 2 步中，认证服务器需要对客户端的身份进行验证，确保是受信任的客户端。
+
+### 4.5 客户端模式
+
+如果信任关系再进一步，或者调用者是一个后端的模块，没有用户界面的时候，可以使用客户端模式。鉴权服务器直接对客户端进行身份验证，验证通过后，返回 token。
+
+> 也就是：连账号密码都不用输入了。
+
+![img](16-Spring-Security-oAuth2.assets/Lusifer_2019040104270001.png)
