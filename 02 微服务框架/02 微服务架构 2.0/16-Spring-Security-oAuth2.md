@@ -449,13 +449,116 @@ https://www.funtl.com/exchange?code=&client_id=&client_secret=
 
 #### 5.3.2 配置认证服务器
 
+创建一个类继承 `AuthorizationServerConfigurerAdapter `并在子类上添加注解
+
+1. `@Configuration`
+2. `@EnableAuthorizationServer `（表示开启认证服务）
+
+```java
+@Configuration
+@EnableAuthorizationServer
+public class AuthorizationServerConfiguration extends AuthorizationServerConfigurerAdapter {
+
+    @Autowired
+    private BCryptPasswordEncoder passwordEncoder;
+
+    @Override
+    public void configure(ClientDetailsServiceConfigurer clients) throws Exception {
+        // 配置客户端
+        clients
+                // 将 clientId 和 clientSecret 保存到内存中
+                .inMemory()
+                .withClient("client01")
+                .secret(passwordEncoder.encode("secret01"))
+                // 授权类型
+                .authorizedGrantTypes("authorization_code")
+                // 授权范围
+                .scopes("app")
+                // 注册回调地址
+                .redirectUris("http://www.funtl.com");
+    }
+}
+
+```
+
+可以看到，上面重写的 `configure `方法中，在内存中设置了一个账号 `client01`，这个就是服务器为某个 APP 设置的认证账号，认证的类型是 `authorization_code `类型。当认证成功以后，认证服务器会重定向到 `http://www.funtl.com`。
+
+#### 5.3.3 服务器安全配置
+
+创建一个类继承 WebSecurityConfigurerAdapter ，并在子类上添加以下注解：
+
+1. `@EnableWebSecurity`  
+2. `@EnableGlobalMethodSecurity(prePostEnabled = true, securedEnabled = true, jsr250Enabled = true)`
+
+```java
+@Configuration
+@EnableWebSecurity
+// ① 这里相当于设置了一个全局拦截器
+@EnableGlobalMethodSecurity(prePostEnabled = true, securedEnabled = true, jsr250Enabled = true)
+public class WebSecurityConfiguration extends WebSecurityConfigurerAdapter {
+
+    @Bean
+    public BCryptPasswordEncoder passwordEncoder() {
+        return new BCryptPasswordEncoder();
+    }
+
+    @Override
+    protected void configure(AuthenticationManagerBuilder auth) throws Exception {
+        auth.inMemoryAuthentication()
+                .withUser("user01").password(passwordEncoder().encode("123456")).roles("USER")
+                .and()
+                .withUser("admin").password(passwordEncoder().encode("123456")).roles("ADMIN");
+    }
+}
+```
+
+上面的 configure 方法中，设置了两个账号：user01 与 admin ；
 
 
 
+经过上面的步骤，Spring Security oAuth 2.0 已经整合成功。
 
+#### 5.3.4 启动并测试
 
+启动项目，然后在浏览器中打开以下地址：
 
+```
+http://10.4.62.239:8090/oauth/authorize?client_id=client01&response_type=code
+```
 
+此时，此时会去到一个认证的页面：
+
+![image-20200914183856603](16-Spring-Security-oAuth2.assets/image-20200914183856603.png)
+
+使用账号 user01 或 admin 登陆以后，会跳转到授权页面：
+
+![image-20200914183958717](16-Spring-Security-oAuth2.assets/image-20200914183958717.png)
+
+这个页面就是在获得用户的授权。
+
+得到用户的授权以后，系统会重定向到指定的网址，并且在网址上带有 code：
+
+![image-20200914184208540](16-Spring-Security-oAuth2.assets/image-20200914184208540.png)
+
+经过上面的操作，我们已经获得了 code，接下来的操作就是获得 token。
+
+**获得 token**
+
+我们打开 postman，通过 POST 方式请求以下 URL：
+
+```
+http://client01:secret01@10.4.62.239:8090/oauth/token
+```
+
+![image-20200914184358660](16-Spring-Security-oAuth2.assets/image-20200914184358660.png)
+
+① 第一个表示的是认证服务器为用户分配的 clientId；第二个表示的是对应的密码；
+
+点击请求以后，会得到以下的返回：
+
+![image-20200914184527909](16-Spring-Security-oAuth2.assets/image-20200914184527909.png)
+
+这时候，我们已经得到了 token，下一步，就是拿着这个 token 去请求资源服务器。
 
 
 
