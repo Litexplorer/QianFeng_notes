@@ -485,7 +485,7 @@ public class AuthorizationServerConfiguration extends AuthorizationServerConfigu
 
 #### 5.3.3 服务器安全配置
 
-创建一个类继承 WebSecurityConfigurerAdapter ，并在子类上添加以下注解：
+创建一个类继承 `WebSecurityConfigurerAdapter `，并在子类上添加以下注解：
 
 1. `@EnableWebSecurity`  
 2. `@EnableGlobalMethodSecurity(prePostEnabled = true, securedEnabled = true, jsr250Enabled = true)`
@@ -562,7 +562,11 @@ http://client01:secret01@10.4.62.239:8090/oauth/token
 
 ### 5.4 基于内存存储令牌的——服务端 + 客户端
 
+在这个案例中，我们会在上面的『基于内存存储令牌』的基础上，将“手动获取令牌”，修改为“通过一个 SpringBoot 服务获取令牌”。
 
+（未完成）
+
+### 5.5 基于 JDBC 存储令牌
 
 
 
