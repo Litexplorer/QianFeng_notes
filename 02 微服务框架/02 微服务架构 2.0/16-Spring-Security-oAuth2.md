@@ -57,7 +57,7 @@ oAuth 在 "客户端" 与 "服务提供商" 之间，设置了一个授权层（
 >
 > 本质上，oAuth2 协议就是将原来“在资源服务器”上做的认证与授权，分离出来一个『认证服务器』专门来实现。然后『认证服务器』会返回一个“令牌”，从而让『资源服务器』确认身份。
 
-## 三、Spring Security哦Auth2 令牌的访问与刷新
+## 三、Spring Security OAuth2 令牌的访问与刷新
 
 ### 3.1 Access Token
 
@@ -157,8 +157,7 @@ https://www.funtl.com/exchange?code=&client_id=&client_secret=
 
 ```xml
 <?xml version="1.0" encoding="UTF-8"?>
-<project xmlns="http://maven.apache.org/POM/4.0.0"
-         xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
          xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
     <modelVersion>4.0.0</modelVersion>
 
@@ -170,14 +169,13 @@ https://www.funtl.com/exchange?code=&client_id=&client_secret=
     </parent>
 
     <groupId>com.chen</groupId>
-    <artifactId>01-hello-spring-security-oauth2</artifactId>
-    <version>1.0-SNAPSHOT</version>
+    <artifactId>01-spring-security-oauth2</artifactId>
+    <version>1.0.0-SNAPSHOT</version>
     <packaging>pom</packaging>
+    <url>http://www.funtl.com</url>
 
     <modules>
-        <module>01-spring-security-oauth2-dependencies</module>
-        <module>02-oauth2</module>
-        <module>01-oauth2-server</module>
+        <module>oauth2</module>
     </modules>
 
     <properties>
@@ -188,19 +186,13 @@ https://www.funtl.com/exchange?code=&client_id=&client_secret=
         <project.reporting.outputEncoding>UTF-8</project.reporting.outputEncoding>
     </properties>
 
-    <licenses>
-        <license>
-            <name>Apache 2.0</name>
-            <url>https://www.apache.org/licenses/LICENSE-2.0.txt</url>
-        </license>
-    </licenses>
+
 
     <dependencyManagement>
         <dependencies>
-            <!-- ① -->
             <dependency>
                 <groupId>com.chen</groupId>
-                <artifactId>01-spring-security-oauth2-dependencies</artifactId>
+                <artifactId>dependencies</artifactId>
                 <version>${project.version}</version>
                 <type>pom</type>
                 <scope>import</scope>
@@ -217,7 +209,6 @@ https://www.funtl.com/exchange?code=&client_id=&client_secret=
             <properties>
                 <spring-javaformat.version>0.0.7</spring-javaformat.version>
             </properties>
-
             <build>
                 <plugins>
                     <plugin>
@@ -321,8 +312,8 @@ https://www.funtl.com/exchange?code=&client_id=&client_secret=
             </snapshots>
         </pluginRepository>
     </pluginRepositories>
-
 </project>
+
 ```
 
 ① 这个依赖项目是全局统一管理项目
@@ -331,35 +322,32 @@ https://www.funtl.com/exchange?code=&client_id=&client_secret=
 
 ```xml
 <?xml version="1.0" encoding="UTF-8"?>
-<project xmlns="http://maven.apache.org/POM/4.0.0"
-         xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
          xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
-    <parent>
-        <artifactId>01-hello-spring-security-oauth2</artifactId>
-        <groupId>com.chen</groupId>
-        <version>1.0-SNAPSHOT</version>
-    </parent>
     <modelVersion>4.0.0</modelVersion>
-    <packaging>pom</packaging>
 
-    <artifactId>01-spring-security-oauth2-dependencies</artifactId>
+    <groupId>com.chen</groupId>
+    <artifactId>dependencies</artifactId>
+    <version>1.0.0-SNAPSHOT</version>
+    <packaging>pom</packaging>
+    <url>http://www.funtl.com</url>
 
     <properties>
         <spring-cloud.version>Greenwich.RELEASE</spring-cloud.version>
     </properties>
 
+
     <dependencyManagement>
         <dependencies>
             <dependency>
-                <groupId>org.springframeworl.cloud</groupId>
-                <artifactId>spring-cloud-denpendencies</artifactId>
+                <groupId>org.springframework.cloud</groupId>
+                <artifactId>spring-cloud-dependencies</artifactId>
                 <version>${spring-cloud.version}</version>
                 <type>pom</type>
                 <scope>import</scope>
             </dependency>
         </dependencies>
     </dependencyManagement>
-
 
     <repositories>
         <repository>
@@ -400,6 +388,7 @@ https://www.funtl.com/exchange?code=&client_id=&client_secret=
     </pluginRepositories>
 
 </project>
+
 ```
 
 至此，我们创建了父工程项目以及依赖管理项目。
@@ -410,31 +399,25 @@ https://www.funtl.com/exchange?code=&client_id=&client_secret=
 
 ```xml
 <?xml version="1.0" encoding="UTF-8"?>
-<project xmlns="http://maven.apache.org/POM/4.0.0"
-         xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
          xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
-    <parent>
-        <artifactId>01-hello-spring-security-oauth2</artifactId>
-        <groupId>com.chen</groupId>
-        <version>1.0-SNAPSHOT</version>
-    </parent>
     <modelVersion>4.0.0</modelVersion>
 
-    <artifactId>02-oauth2</artifactId>
+    <parent>
+        <groupId>com.chen</groupId>
+        <artifactId>01-spring-security-oauth2</artifactId>
+        <version>1.0.0-SNAPSHOT</version>
+    </parent>
+
+    <artifactId>oauth2</artifactId>
     <packaging>pom</packaging>
 
     <modules>
-        <module>01-oauth2-server</module>
+        <!-- 工程模块请随着项目的不断完善自行添加 -->
     </modules>
 
-    <licenses>
-        <license>
-            <name>Apache 2.0</name>
-            <url>https://www.apache.org/licenses/LICENSE-2.0.txt</url>
-        </license>
-    </licenses>
-
 </project>
+
 ```
 
 以后，我们的 oAuth2 的项目都在该项目下创建。
@@ -442,6 +425,63 @@ https://www.funtl.com/exchange?code=&client_id=&client_secret=
 ### 5.3 基于内存存储令牌
 
 本次例子基于『内存存储令牌』的模式，用于实现『授权码模式』的简单例子。
+
+我们首先在 01-oauth2-server 文件夹下创建一个新的文件夹 oauth2-server，在该文件夹下创建 pom 文件：
+
+```xml
+<?xml version="1.0" encoding="UTF-8"?>
+<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+    <modelVersion>4.0.0</modelVersion>
+
+    <parent>
+        <groupId>com.chen</groupId>
+        <artifactId>oauth2</artifactId>
+        <version>1.0.0-SNAPSHOT</version>
+    </parent>
+
+    <artifactId>oauth2-server</artifactId>
+
+
+    <dependencies>
+        <!-- Spring Boot -->
+        <dependency>
+            <groupId>org.springframework.boot</groupId>
+            <artifactId>spring-boot-starter-web</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>org.springframework.boot</groupId>
+            <artifactId>spring-boot-starter-test</artifactId>
+        </dependency>
+
+        <!-- Spring Security -->
+        <dependency>
+            <groupId>org.springframework.cloud</groupId>
+            <artifactId>spring-cloud-starter-oauth2</artifactId>
+        </dependency>
+    </dependencies>
+
+    <build>
+        <plugins>
+            <plugin>
+                <groupId>org.springframework.boot</groupId>
+                <artifactId>spring-boot-maven-plugin</artifactId>
+                <configuration>
+                    <mainClass>com.funtl.oauth2.OAuth2ServerApplication</mainClass>
+                </configuration>
+            </plugin>
+        </plugins>
+    </build>
+
+</project>
+
+```
+
+注意刷新 idea 项目的所能够识别的依赖：
+
+![image-20201007123455596](16-Spring-Security-oAuth2.assets/image-20201007123455596.png)
+
+如果没有识别到依赖，那可能需要重启 IDE。
 
 #### 5.3.1 操作流程
 
@@ -568,7 +608,360 @@ http://client01:secret01@10.4.62.239:8090/oauth/token
 
 ### 5.5 基于 JDBC 存储令牌
 
+#### 5.5.1 流程图
 
+![img](16-Spring-Security-oAuth2.assets/Lusifer_201904030001.png)
+
+#### 5.5.2 准备工作
+
+在进行操作以前，我们需要准备好以下的工作：
+
+1. 系统中存在 oAuth2 相关的表；具体哪些表可以参考：https://github.com/spring-projects/spring-security-oauth/blob/master/spring-security-oauth2/src/test/resources/schema.sql
+   除了需要这些表以外，我们还需要在表中配置相关的信息
+2. 确保项目可以正确地读取数据库（也就是配置数据源、实体类等信息）
+
+
+
+#### 5.5.3 准备工作：创建 oAuth2 相关的表
+
+在数据库中运行以下 SQL 语句：
+
+```mysql
+CREATE TABLE `clientdetails` (
+  `appId` varchar(128) NOT NULL,
+  `resourceIds` varchar(256) DEFAULT NULL,
+  `appSecret` varchar(256) DEFAULT NULL,
+  `scope` varchar(256) DEFAULT NULL,
+  `grantTypes` varchar(256) DEFAULT NULL,
+  `redirectUrl` varchar(256) DEFAULT NULL,
+  `authorities` varchar(256) DEFAULT NULL,
+  `access_token_validity` int(11) DEFAULT NULL,
+  `refresh_token_validity` int(11) DEFAULT NULL,
+  `additionalInformation` varchar(4096) DEFAULT NULL,
+  `autoApproveScopes` varchar(256) DEFAULT NULL,
+  PRIMARY KEY (`appId`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8;
+
+CREATE TABLE `oauth_access_token` (
+  `token_id` varchar(256) DEFAULT NULL,
+  `token` blob,
+  `authentication_id` varchar(128) NOT NULL,
+  `user_name` varchar(256) DEFAULT NULL,
+  `client_id` varchar(256) DEFAULT NULL,
+  `authentication` blob,
+  `refresh_token` varchar(256) DEFAULT NULL,
+  PRIMARY KEY (`authentication_id`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8;
+
+CREATE TABLE `oauth_approvals` (
+  `userId` varchar(256) DEFAULT NULL,
+  `clientId` varchar(256) DEFAULT NULL,
+  `scope` varchar(256) DEFAULT NULL,
+  `status` varchar(10) DEFAULT NULL,
+  `expiresAt` timestamp NULL DEFAULT NULL,
+  `lastModifiedAt` timestamp NULL DEFAULT NULL
+) ENGINE=InnoDB DEFAULT CHARSET=utf8;
+
+CREATE TABLE `oauth_client_details` (
+  `client_id` varchar(128) NOT NULL,
+  `resource_ids` varchar(256) DEFAULT NULL,
+  `client_secret` varchar(256) DEFAULT NULL,
+  `scope` varchar(256) DEFAULT NULL,
+  `authorized_grant_types` varchar(256) DEFAULT NULL,
+  `web_server_redirect_uri` varchar(256) DEFAULT NULL,
+  `authorities` varchar(256) DEFAULT NULL,
+  `access_token_validity` int(11) DEFAULT NULL,
+  `refresh_token_validity` int(11) DEFAULT NULL,
+  `additional_information` varchar(4096) DEFAULT NULL,
+  `autoapprove` varchar(256) DEFAULT NULL,
+  PRIMARY KEY (`client_id`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8;
+
+CREATE TABLE `oauth_client_token` (
+  `token_id` varchar(256) DEFAULT NULL,
+  `token` blob,
+  `authentication_id` varchar(128) NOT NULL,
+  `user_name` varchar(256) DEFAULT NULL,
+  `client_id` varchar(256) DEFAULT NULL,
+  PRIMARY KEY (`authentication_id`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8;
+
+CREATE TABLE `oauth_code` (
+  `code` varchar(256) DEFAULT NULL,
+  `authentication` blob
+) ENGINE=InnoDB DEFAULT CHARSET=utf8;
+
+CREATE TABLE `oauth_refresh_token` (
+  `token_id` varchar(256) DEFAULT NULL,
+  `token` blob,
+  `authentication` blob
+) ENGINE=InnoDB DEFAULT CHARSET=utf8;
+
+```
+
+然后执行新的脚本：
+
+```mysql
+INSERT INTO `oauth_client_details`(`client_id`, `resource_ids`, `client_secret`, `scope`, `authorized_grant_types`, `web_server_redirect_uri`, `authorities`, `access_token_validity`, `refresh_token_validity`, `additional_information`, `autoapprove`) VALUES ('client01', NULL, '$2a$10$oE9w0jg8BShqATIwhG2cyOPI7qFbA4sVTfNBYm.RPtHTojYJVCZy6', 'app', 'authorization_code', 'http://www.baidu.com', NULL, NULL, NULL, NULL, NULL);
+
+```
+
+上面脚本的意思是：在 oauth_client_details 表中插入一条记录，该记录的 client_secret 明文值为 123456.回调地址为 http://www.baidu.com。
+
+上面的脚本可以相当替换了 AuthorizationServerConfiguration 中的内存配置。
+
+接下来，我们就可以配置 Spring Security oAuth2 了。
+
+#### 5.5.4 引入依赖
+
+我们本次例子中需要连接数据库，因此需要引入数据库连接的相关依赖：
+
+1. 在 dependencies 项目中引入：
+
+   ```xml
+   1. 在 properties 中引入
+   <hikaricp.version>3.2.0</hikaricp.version>
+   <mysql.version>8.0.21</mysql.version>
+   
+   2. 在 dependencyManagement 中引入
+   <dependency>
+       <groupId>com.zaxxer</groupId>
+       <artifactId>HikariCP</artifactId>
+       <version>${hikaricp.version}</version>
+   </dependency>
+   <dependency>
+       <groupId>org.springframework.boot</groupId>
+       <artifactId>spring-boot-starter-jdbc</artifactId>
+       <exclusions>
+           <!-- 排除 tomcat-jdbc 以使用 HikariCP -->
+           <exclusion>
+               <groupId>org.apache.tomcat</groupId>
+               <artifactId>tomcat-jdbc</artifactId>
+           </exclusion>
+       </exclusions>
+   </dependency>
+   <dependency>
+       <groupId>mysql</groupId>
+       <artifactId>mysql-connector-java</artifactId>
+       <version>${mysql.version}</version>
+   </dependency>
+   ```
+
+2. 在 oauth-server 项目中引入：
+
+   ```xml
+   <dependency>
+       <groupId>com.zaxxer</groupId>
+       <artifactId>HikariCP</artifactId>
+   </dependency>
+   <dependency>
+       <groupId>org.springframework.boot</groupId>
+       <artifactId>spring-boot-starter-jdbc</artifactId>
+       <exclusions>
+           <!-- 排除 tomcat-jdbc 以使用 HikariCP -->
+           <exclusion>
+               <groupId>org.apache.tomcat</groupId>
+               <artifactId>tomcat-jdbc</artifactId>
+           </exclusion>
+       </exclusions>
+   </dependency>
+   <dependency>
+       <groupId>mysql</groupId>
+       <artifactId>mysql-connector-java</artifactId>
+   </dependency>
+   ```
+
+   注意刷新项目依赖：
+   ![image-20201007124107187](16-Spring-Security-oAuth2.assets/image-20201007124107187.png)
+
+#### 5.5.5 配置认证服务器
+
+创建一个类，继承 AuthorizationServerConfigurerAdapter，然后在该类中配置数据源等项相关信息：
+
+```java
+import org.springframework.boot.context.properties.ConfigurationProperties;
+import org.springframework.boot.jdbc.DataSourceBuilder;
+import org.springframework.context.annotation.Bean;
+import org.springframework.context.annotation.Configuration;
+import org.springframework.context.annotation.Primary;
+import org.springframework.security.oauth2.config.annotation.configurers.ClientDetailsServiceConfigurer;
+import org.springframework.security.oauth2.config.annotation.web.configuration.AuthorizationServerConfigurerAdapter;
+import org.springframework.security.oauth2.config.annotation.web.configuration.EnableAuthorizationServer;
+import org.springframework.security.oauth2.config.annotation.web.configurers.AuthorizationServerEndpointsConfigurer;
+import org.springframework.security.oauth2.provider.ClientDetailsService;
+import org.springframework.security.oauth2.provider.client.JdbcClientDetailsService;
+import org.springframework.security.oauth2.provider.token.TokenStore;
+import org.springframework.security.oauth2.provider.token.store.JdbcTokenStore;
+
+import javax.sql.DataSource;
+
+/**
+ * @Author: ChromeChen
+ * @Description:
+ * @Date: Created in 12:41 2020/10/7 0007
+ * @Modified By:
+ */
+@Configuration
+@EnableAuthorizationServer
+public class AuthorizationServerConfiguration extends AuthorizationServerConfigurerAdapter {
+
+    @Bean
+    @Primary
+    @ConfigurationProperties(prefix = "spring.datasource")
+    public DataSource dataSource() {
+        return DataSourceBuilder.create().build();
+    }
+
+    @Bean
+    public TokenStore tokenStore() {
+        // 基于 JDBC 实现，令牌保存到数据库
+        return new JdbcTokenStore(dataSource());
+    }
+
+    @Bean
+    public ClientDetailsService clientDetailsService() {
+        // 基于 JDBC 实现，需要事先在数据库配置客户端信息
+        return new JdbcClientDetailsService(dataSource());
+    }
+
+    @Override
+    public void configure(AuthorizationServerEndpointsConfigurer endpoints) throws Exception {
+        // 设置令牌
+        endpoints.tokenStore(tokenStore());
+    }
+
+    @Override
+    public void configure(ClientDetailsServiceConfigurer clients) throws Exception {
+        // 读取客户端配置
+        clients.withClientDetails(clientDetailsService());
+    }
+}
+
+```
+
+#### 5.5.6 服务器安全配置
+
+创建一个类，继承 WebSecurityConfigurerAdapter，在子类中配置相关信息：
+
+```java
+
+import org.springframework.context.annotation.Bean;
+import org.springframework.context.annotation.Configuration;
+import org.springframework.security.config.annotation.authentication.builders.AuthenticationManagerBuilder;
+import org.springframework.security.config.annotation.method.configuration.EnableGlobalMethodSecurity;
+import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
+import org.springframework.security.config.annotation.web.configuration.WebSecurityConfigurerAdapter;
+import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
+
+@Configuration
+@EnableWebSecurity
+@EnableGlobalMethodSecurity(prePostEnabled = true, securedEnabled = true, jsr250Enabled = true)
+public class WebSecurityConfiguration extends WebSecurityConfigurerAdapter {
+
+    @Bean
+    public BCryptPasswordEncoder passwordEncoder() {
+        // 设置默认的加密方式
+        return new BCryptPasswordEncoder();
+    }
+
+    @Override
+    protected void configure(AuthenticationManagerBuilder auth) throws Exception {
+
+        auth.inMemoryAuthentication()
+                // 在内存中创建用户并为密码加密
+                .withUser("user01").password(passwordEncoder().encode("123456")).roles("USER")
+                .and()
+                .withUser("admin01").password(passwordEncoder().encode("123456")).roles("ADMIN");
+
+    }
+}
+```
+
+通过上面的配置我们可以看出：
+
+1. 我们的用户名和密码都是基于『内存』方式来存储的，没有涉及到数据库；
+2. `@EnableGlobalMethodSecurity `注解开启了全局拦截器；
+
+#### 5.5.7 在配置文件中补充数据库相关信息：
+
+```yml
+spring:
+  application:
+    name: oauth-server
+  datasource:
+    type: com.zaxxer.hikari.HikariDataSource
+    driver-class-name: com.mysql.cj.jdbc.Driver
+    jdbc-url: jdbc:mysql://localhost:3307/oauth2?useUnicode=true&characterEncoding=utf-8&useSSL=false
+    username: root
+    password: root
+    hikari:
+      minimum-idle: 5
+      idle-timeout: 600000
+      maximum-pool-size: 10
+      auto-commit: true
+      pool-name: MyHikariCP
+      max-lifetime: 1800000
+      connection-timeout: 30000
+      connection-test-query: SELECT 1
+server:
+  port: 8090
+
+```
+
+#### 5.5.8 启动并排查数据库报错
+
+启动项目，然后观察启动日志。
+
+1. 如果发现出现以下错误：
+
+   ```
+   java.sql.SQLException: The server time zone value 'ÖÐ¹ú±ê×¼Ê±¼ä' is unrecognized or represents more than one time zone. You must configure either the server or JDBC driver (via the serverTimezone configuration property) to use a more specifc time zone value if you want to utilize time zone support.
+   
+   ```
+
+   观察日志，我们可以发现是时区的问题，我们需要在 jdbc-url的值后面添加参数：`serverTimezone=GMT`
+
+当启动成功以后，我们可以发现数据库连接池也初始化成功：
+
+![image-20201007130107153](16-Spring-Security-oAuth2.assets/image-20201007130107153.png)
+
+#### 5.5.9 访问并获取 token
+
+访问地址：
+
+```
+http://localhost:8090/oauth/authorize?client_id=client01&response_type=code
+```
+
+并登陆，并使用代码中的用户名密码登录：
+
+![image-20201007130353197](16-Spring-Security-oAuth2.assets/image-20201007130353197.png)
+
+点击『Sign in』以后会跳转到这个页面：
+
+![image-20201007130421962](16-Spring-Security-oAuth2.assets/image-20201007130421962.png)
+
+我们点击『Approve』并点击按钮『Authorize』，将会跳转到指定的 URL 中（该 URL 在数据库中指定），该 URL 后面会附带一个 code：
+
+![image-20201007130600144](16-Spring-Security-oAuth2.assets/image-20201007130600144.png)
+
+接着，我们通过 curl 或者 Postman 来请求 token：
+
+```
+curl -X POST -H "Content-Type: application/x-www-form-urlencoded" -d 'grant_type=authorization_code&code=Mx0djV' "http://client01:secret01@localhost:8090/oauth/token"
+```
+
+即可得到 token。
+
+![image-20201007131529225](16-Spring-Security-oAuth2.assets/image-20201007131529225.png)
+
+数据库中 oauth_access_token 也出现了相应的记录
+
+![image-20201007131649887](16-Spring-Security-oAuth2.assets/image-20201007131649887.png)
+
+#### 5.5.10 总结
+
+『基于 JDBC 存储令牌』相比『基于内存存储令牌』，就是在数据库中存储了令牌信息。存储的位置是 oauth2 的指定表中。增加了对应的表以后，我们需要在项目代码中增加指定的依赖，用于连接数据库，并把 `AuthorizationServerConfiguration `授权方式从内存改为数据库中读取。
 
 ## 六、RBAC——基于角色的访问控制
 
