@@ -1140,13 +1140,187 @@ mybatis:
 
 此时，启动项目，测试是否报错。如果没有报错，那么说明集成 tk.mybatis 成功。
 
+#### 6.3.3 实现“认证”与“授权”的代码
+
+使用 Oauth2 时，我们需要把认证与授权的工作交给框架去做。在移交工作以前，我们需要将“认证”的信息，与“授权”的信息都查询出来，然后交给框架。
 
 
 
+新建一个 `UserDetailsService` 的实现类 `UserDetailsServiceImpl`，重写该类的 `loadUserByUsername `方法。
 
-后面补充
+```java
+package com.chen.oauth2.server.config.service;
+
+import com.chen.oauth2.server.domain.TbPermission;
+import com.chen.oauth2.server.domain.TbUser;
+import com.chen.oauth2.server.service.ITbPermissionService;
+import com.chen.oauth2.server.service.ITbUserService;
+import org.assertj.core.util.Lists;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.security.core.GrantedAuthority;
+import org.springframework.security.core.authority.SimpleGrantedAuthority;
+import org.springframework.security.core.userdetails.User;
+import org.springframework.security.core.userdetails.UserDetails;
+import org.springframework.security.core.userdetails.UserDetailsService;
+import org.springframework.security.core.userdetails.UsernameNotFoundException;
+import org.springframework.stereotype.Service;
+
+import java.util.List;
+
+/**
+ * @Author: ChromeChen
+ * @Description:
+ * @Date: Created in 14:56 2020/10/29 0029
+ * @Modified By:
+ */
+@Service
+public class UserDetailsServiceImpl implements UserDetailsService {
+
+    @Autowired
+    private ITbUserService tbUserService;
+    @Autowired
+    private ITbPermissionService tbPermissionService;
+
+    @Override
+    public UserDetails loadUserByUsername(String username) throws UsernameNotFoundException {
+        // 查询用户信息
+        TbUser tbUser = tbUserService.getByUsername(username);
+        List<GrantedAuthority> grantedAuthorities = Lists.newArrayList();
+        if (tbUser != null) {
+            List<TbPermission> tbPermissions = tbPermissionService.selectByUserId(tbUser.getId());
+            // 声明用户授权
+            tbPermissions.forEach(tbPermission -> {
+                if (tbPermission != null && tbPermission.getEnname() != null) {
+                    GrantedAuthority grantedAuthority = new SimpleGrantedAuthority(tbPermission.getEnname());
+                    grantedAuthorities.add(grantedAuthority);
+                }
+            });
+        }
+
+        // 由框架完成认证工作
+        return new User(tbUser.getUsername(), tbUser.getPassword(), grantedAuthorities);
+    }
+}
+
+```
+
+从上面的步骤中可以看出：在该方法返回以前，首先需要：
+
+1. 查询用户的信息：该步骤的具体代码实现位于 `TbUserService `中；
+2. 根据用户 ID 查询权限信息（权限配置信息在上一个章节的数据库脚本中），具体代码实现位于 `TbPermisstionService `中；
+
+在获取了用户信息 + 权限信息以后，返回一个 `User `对象，由框架完成认证工作。
+
+> 1. `TbUserService  `的实现代码：
+>
+>    ```java
+>    @Service
+>    public class TbUserServiceImpl implements ITbUserService {
+>    
+>        @Autowired
+>        private TbUserMapper userMapper;
+>    
+>        @Override
+>        public TbUser getByUsername(String username) {
+>            Example example = new Example(TbUser.class);
+>            example.createCriteria().andEqualTo("username", username);
+>            return userMapper.selectOneByExample(example);
+>        }
+>    }
+>    ```
+>
+> 2. `TbPermisstionService  `的实现代码：
+>
+>    ```java
+>    @Service
+>    public class TbPermissionService implements ITbPermissionService {
+>    
+>        @Autowired
+>        private TbPermissionMapper permissionMapper;
+>    
+>        @Override
+>        public List<TbPermission> selectByUserId(Long userId) {
+>            return permissionMapper.selectByUserId(userId);
+>        }
+>    }
+>    ```
+>
+>    xml 代码如下：
+>
+>    ```xml
+>    <select id="selectByUserId" resultType="com.chen.oauth2.server.domain.TbPermission">
+>        SELECT
+>        p.*
+>        FROM
+>        tb_user AS u
+>        LEFT JOIN tb_user_role AS ur ON u.id = ur.user_id
+>        LEFT JOIN tb_role_permission AS rp ON ur.role_id = rp.role_id
+>        LEFT JOIN tb_permission AS p ON rp.permission_id = p.id
+>        WHERE u.id = #{userId}
+>    </select>
+>    
+>    ```
+>
+>    
+
+#### 6.3.4 修改服务器安全配置
+
+新建 `WebSecurityConfigurerAdapter `的子类 `WebSecurityConfiguration`，并在该类上添加以下注解：
+
+- `@Configuration`
+- `@EnableWebSecurity`
+- `@EnableGlobalMethodSecurity(prePostEnabled = true, securedEnabled = true, jsr250Enabled = true)`：全局方法拦截；
+
+该配置类充当了全局拦截器。
+
+类中的具体配置信息如下：
+
+```java
+@Configuration
+@EnableWebSecurity
+@EnableGlobalMethodSecurity(prePostEnabled = true, securedEnabled = true, jsr250Enabled = true)
+public class WebSecurityConfiguration extends WebSecurityConfigurerAdapter {
+
+    @Bean
+    public BCryptPasswordEncoder passwordEncoder() {
+        // 设置默认的加密方式
+        return new BCryptPasswordEncoder();
+    }
+
+    @Bean
+    @Override
+    public UserDetailsService userDetailsService() {
+        return new UserDetailsServiceImpl();
+    }
+
+    @Override
+    protected void configure(AuthenticationManagerBuilder auth) throws Exception {
+        // 使用自定义认证与授权
+        auth.userDetailsService(userDetailsService());
+    }
+}
+```
+
+> 通过对比 RBAC 和基于内存存储用户名密码 这两种方式，可以发现：
+>
+> 1. 基于 RBAC 方式实际上就是把用户名密码与权限的信息转移到了『数据库』中，从数据库中查询信息。
+> 2. 由于用户名密码存放在了 user 表中，而权限信息保存在了 permission 表中，因此，为了业务解耦，需要生成这两个模块相应的 Mapper 以及业务操作代码；
+
+
+
+#### 6.3.5 获取 token
+
+启动项目，然后获取 token。
+
+具体步骤请查看 [5.5.9 访问并获取 token](#5.5.9 访问并获取 token)
 
 > Session 在设计之处，就不能不允许存放大量内容。互联网应用经常会出现高并发场景，所以：互联网应用必须和 Session 分离
+
+#### 6.3.6 总结
+
+本个 demo 是在《基于 jdbc 存储令牌》的基础上，逐步过渡到《基于 RBAC 角色的访问控制》。本质上，就是将『基于内存存储的“认证”与“授权”』的信息，移送到了『数据库』中，由此需要做好数据库的初始化工作、项目连接数据库的工作、业务代码查询数据库的工作。
+
+关于如何更加顺利地过渡，可以使用『渐进式』过渡方式：首先初始化数据库的内容，然后使用 SQL 测试；接着在项目中添加和数据库连接有关的功能，并完成简单测试；然后生成相对应的 PO、Mapper 以及业务类；最后完成代码的修改。
 
 
 
