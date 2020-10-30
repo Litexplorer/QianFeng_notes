@@ -1324,6 +1324,283 @@ public class WebSecurityConfiguration extends WebSecurityConfigurerAdapter {
 
 
 
+## 七、创建资源服务器
+
+用户请求资源服务器的调用过程如下所示：
+
+![img](16-Spring-Security-oAuth2.assets/Lusifer_2019040703090001.png)
+
+### 7.1 创建项目
+
+我们在工程 oauth2 下创建一个子工程 oauth2-resource，其中，pom 文件如下所示：
+
+```xml
+<?xml version="1.0" encoding="UTF-8"?>
+<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+    <modelVersion>4.0.0</modelVersion>
+
+    <parent>
+        <groupId>com.chen</groupId>
+        <artifactId>oauth2</artifactId>
+        <version>1.0.0-SNAPSHOT</version>
+    </parent>
+
+    <artifactId>oauth2-resource</artifactId>
+
+
+    <dependencies>
+        <!-- Spring Boot -->
+        <dependency>
+            <groupId>org.springframework.boot</groupId>
+            <artifactId>spring-boot-starter-web</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>org.springframework.boot</groupId>
+            <artifactId>spring-boot-starter-test</artifactId>
+        </dependency>
+
+        <!-- Spring Security -->
+        <dependency>
+            <groupId>org.springframework.cloud</groupId>
+            <artifactId>spring-cloud-starter-oauth2</artifactId>
+        </dependency>
+
+        <!-- 数据库 -->
+        <dependency>
+            <groupId>com.zaxxer</groupId>
+            <artifactId>HikariCP</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>org.springframework.boot</groupId>
+            <artifactId>spring-boot-starter-jdbc</artifactId>
+            <exclusions>
+                <!-- 排除 tomcat-jdbc 以使用 HikariCP -->
+                <exclusion>
+                    <groupId>org.apache.tomcat</groupId>
+                    <artifactId>tomcat-jdbc</artifactId>
+                </exclusion>
+            </exclusions>
+        </dependency>
+        <dependency>
+            <groupId>mysql</groupId>
+            <artifactId>mysql-connector-java</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>tk.mybatis</groupId>
+            <artifactId>mapper-spring-boot-starter</artifactId>
+        </dependency>
+
+        <!-- Lombok -->
+        <dependency>
+            <groupId>org.projectlombok</groupId>
+            <artifactId>lombok</artifactId>
+        </dependency>
+    </dependencies>
+
+    <build>
+        <plugins>
+            <plugin>
+                <groupId>org.springframework.boot</groupId>
+                <artifactId>spring-boot-maven-plugin</artifactId>
+                <configuration>
+                    <mainClass>com.chen.oauth2.OAuth2ResourceApplication</mainClass>
+                </configuration>
+            </plugin>
+        </plugins>
+    </build>
+
+</project>
+
+```
+
+基本和 oauth2-server 项目一致。
+
+创建 application .yml 文件，文件内容如下：
+
+```yaml
+spring:
+  application:
+    name: oauth2-resource
+  datasource:
+    type: com.zaxxer.hikari.HikariDataSource
+    driver-class-name: com.mysql.cj.jdbc.Driver
+    url: jdbc:mysql://10.4.62.239:3307/oauth2_resource?useUnicode=true&characterEncoding=utf-8&useSSL=false&serverTimezone=GMT
+    username: root
+    password: root
+    hikari:
+      minimum-idle: 5
+      idle-timeout: 600000
+      maximum-pool-size: 10
+      auto-commit: true
+      pool-name: MyHikariCP
+      max-lifetime: 1800000
+      connection-timeout: 30000
+      connection-test-query: SELECT 1
+
+server:
+  port: 8081
+  servlet:
+    context-path: /contents
+```
+
+此时，启动项目，观察是否报错。如果没有报错，继续执行下一步。
+
+### 7.2 添加资源服务器配置
+
+在项目中添加类 `ResourceServerConfiguration`，继续自 `ResourceServerConfigurerAdapter`，代码如下：
+
+```java
+package com.chen.oauth2.config;
+
+import org.springframework.context.annotation.Configuration;
+import org.springframework.security.config.annotation.method.configuration.EnableGlobalMethodSecurity;
+import org.springframework.security.config.annotation.web.builders.HttpSecurity;
+import org.springframework.security.config.http.SessionCreationPolicy;
+import org.springframework.security.oauth2.config.annotation.web.configuration.EnableResourceServer;
+import org.springframework.security.oauth2.config.annotation.web.configuration.ResourceServerConfigurerAdapter;
+
+/**
+ * @Author: ChromeChen
+ * @Description:
+ * @Date: Created in 19:43 2020/10/29 0029
+ * @Modified By:
+ */
+@Configuration
+@EnableResourceServer
+@EnableGlobalMethodSecurity(prePostEnabled = true, securedEnabled = true, jsr250Enabled = true)
+public class ResourceServerConfiguration extends ResourceServerConfigurerAdapter {
+
+    @Override
+    public void configure(HttpSecurity http) throws Exception {
+        http
+                .exceptionHandling()
+                .and()
+                // 不使用 Session 来保存状态信息
+                .sessionManagement().sessionCreationPolicy(SessionCreationPolicy.STATELESS)
+                .and()
+                .authorizeRequests()
+                // 以下的内容是：配置所需要保护的资源路径以及权限，需要与认证服务器配置的授权部分（permission 表）对应
+                .antMatchers("/").hasAuthority("SystemContent")
+                .antMatchers("/view/**").hasAuthority("SystemContentView")
+                .antMatchers("/insert/**").hasAuthority("SystemContentInsert")
+
+                ;
+    }
+    
+}
+```
+
+上面的 configure 方法中，指定了需要保护的资源。这个资源和认证服务器的数据库的 permission 表的资源是一致的。
+
+往 application.yml 文件中继续添加以下配置信息：
+
+```yaml
+security:
+  oauth2:
+    client:
+      # ①
+      client-id: client01
+      client-secret: secret01
+      # ②
+      access-token-uri: http://localhost:8090/oauth/token
+      user-authorization-uri: http://localhost:8090/oauth/authorize
+    resource:
+      token-info-uri: http://localhost:8090/oauth/check_token
+```
+
+① 这里指定的是认证服务器的 client_details 表中的记录（也就是所谓的『特征码』）。
+
+② 这里需要指定认证服务器的配置地址。
+
+继续启动项目，观察是否能够正常启动。如果可以，说明上面的配置没有问题。
+
+> 为了控制日志级别，我们可以继续往配置文件中添加以下信息：
+>
+> ```yaml
+> logging:
+>   level:
+>     root: INFO
+>     org.springframework.web: INFO
+>     org.springframework.security: INFO
+>     org.springframework.security.oauth2: INFO
+> ```
+>
+> 再次启动项目，可以发现项目会以 INFO 级别输出信息。
+
+### 7.3 认证服务器与资源服务器联调
+
+接下来，我们需要联调认证服务器与资源服务器，观察两者是否能够联调成功。
+
+首先需要启动两个服务器。
+
+接着通过认证服务器获取 token。获取 token 的方法参考 [5.5.9 访问并获取 token](#5.5.9 访问并获取 token)。我们获取到 token 以后，访问 
+
+```
+http://localhost:8081/contents/view?access_token=你的 token
+```
+
+此时，发现程序出现错误：
+
+![image-20201029225855499](16-Spring-Security-oAuth2.assets/image-20201029225855499.png)
+
+查看控制台，发现出现了错误：
+
+![image-20201029225927414](16-Spring-Security-oAuth2.assets/image-20201029225927414.png)
+
+里面的错误说的是 403 禁止访问。原因是因为资源服务器调用认证服务器的时候，需要请求认证服务器的某个地址，而改地址目前没有在白名单中。
+
+#### 7.3.1 配置白名单
+
+我们需要在 oauth2-server 项目中的安全配置类 中添加以下方法：
+
+```java
+@Override
+public void configure(WebSecurity web) throws Exception {
+    // 将 check_token 暴露出去，否则资源服务器访问是会报 403 错误
+    web.ignoring().antMatchers("/oauth/check_token");
+}
+```
+
+然后重启项目。
+
+#### 7.3.2 继续联调
+
+继续通过上面的步骤获取到 token，然后通过 postman 测试以下请求：
+
+```
+http://localhost:8081/contents/view
+```
+
+带上 Header 参数 Authorization。完整的请求方式为：
+
+![image-20201030085757163](16-Spring-Security-oAuth2.assets/image-20201030085757163.png)
+
+点击 Send 按钮以后，发现返回如下信息：
+
+![image-20201029232136472](16-Spring-Security-oAuth2.assets/image-20201029232136472.png)
+
+这说明该请求被保护起来了（具体原因未知）。
+
+我们换另外一个请求：http://localhost:8081/contents/bbb，发现这个请求返回如下所示：
+
+![image-20201029232320420](16-Spring-Security-oAuth2.assets/image-20201029232320420.png)
+
+可以发现，返回的结果是 404，说明已经通过了权限认证。
+
+#### 7.3.4 总结
+
+通过上面的 demo 我们可以发现：
+
+1. 配置资源服务器，相当于： 普通的 SpringBoot 项目 + 数据库连接 + 资源服务器配置类以及配置信息，同时，认证服务器需要开放 /check_token 端口；
+2. 在资源服务器中的配置类中，我们可以列举所需要保护的资源；当请求被保护的资源时（比如 /view），如果 token 校验不通过，会返回“unauthorized”字样；如果访问的不是被保护的资源（例如 bbb），那么就会请求到该接口；
+
+从上面的第一点总结中，我们可以得到一个搭建资源服务器项目的步骤：在一个普通的 SpringBoot 项目的基础上，添加数据库连接，最后添加资源服务器类以及相关的配置信息。而且也为单元测试提供了划分依据。
+
+从上面的第二点总结中，我们可以看到：可以在代码中指定被保护的请求，请求的表示可以使用正则表达式来表示；推而广之，这些被保护的请求当然也可以写在数据库装，然后对应的表有一个维护页面。
+
+
+
 
 
 
