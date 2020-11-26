@@ -550,6 +550,19 @@ Spring Cloud Alibaba Nacos Config 是 Spring Cloud Config Server 和 Client 的�
 
 注意：不要忘记在 dependencies 项目中添加改依赖的版本管理。
 
+> 或者使用以下依赖：
+>
+> ```xml
+>  <!-- 分布式配置中心 -->
+> <dependency>
+>     <groupId>org.springframework.cloud</groupId>
+>     <artifactId>spring-cloud-starter-alibaba-nacos-config</artifactId>
+> </dependency>
+> 
+> ```
+>
+> 
+
 #### 5.3.2 使用 Nacos 控制台发布配置
 
 ![img](11-Alibaba-Nacos.assets/Fv3i7ReI67lcDvL9hcfgxYletGGW@.webp)
